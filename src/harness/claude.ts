@@ -37,6 +37,8 @@ export const claudeHarness: Harness = {
 
   stateForHookEvent(event: string, payload: unknown): AgentState | null {
     switch (event) {
+      case 'SessionStart':
+        return 'idle' // visible in the session cycle before the first prompt
       case 'UserPromptSubmit':
       case 'PostToolUse': // a tool finished — resuming after question answers / permission grants
         return 'executing'

@@ -36,7 +36,7 @@ npm run verify     # typecheck + lint + format:check + tests — must be green
 
 ## Releases (maintainers)
 
-Version bumps ride a `release/vX.Y.Z` PR; merging + pushing the `vX.Y.Z` tag publishes to npm via trusted publishing and creates the GitHub release automatically.
+Version bumps ride a `release/vX.Y.Z` PR; merging + pushing the `vX.Y.Z` tag publishes to npm via trusted publishing and creates the GitHub release automatically. The release PR must also move the `Unreleased` section of `CHANGELOG.md` under a new `[X.Y.Z] - YYYY-MM-DD` heading — the workflow uses that section as the GitHub release notes.
 
 ## License
 
