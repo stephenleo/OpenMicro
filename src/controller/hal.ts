@@ -4,9 +4,11 @@
 // centrally, instead of each driver tracking its own previous state.
 
 import type { AxisId, ButtonId, ControllerEvent, ControllerType } from '../types.js'
+import type { ControllerOutput } from './output.js'
 
 export interface ControllerHAL {
   readonly controllerType: ControllerType
+  readonly output?: ControllerOutput
   on(event: 'data', listener: (e: ControllerEvent) => void): unknown
   start(): void
   stop(): void

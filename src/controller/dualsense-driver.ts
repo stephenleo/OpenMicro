@@ -6,12 +6,26 @@ import { Dualsense } from 'dualsense-ts'
 import type { Axis, Momentary, Trigger } from 'dualsense-ts'
 import { logger } from '../logger.js'
 import type { ControllerHAL } from './hal.js'
+import type { ControllerOutput } from './output.js'
 import type { AxisId, ButtonId, ControllerEvent } from '../types.js'
 
 export class DualSenseDriver extends EventEmitter implements ControllerHAL {
   readonly controllerType = 'dualsense' as const
 
   private controller: Dualsense | null = null
+
+  // dualsense-ts runs a 30 Hz output loop internally: it diffs lightbar/LED
+  // state against what was last sent and pushes a HID feature report only on
+  // change, handling USB vs Bluetooth report framing (and BT checksum)
+  // itself. We just set desired state — no manual flush needed.
+  get output(): ControllerOutput | undefined {
+    const c = this.controller
+    if (!c) return undefined
+    return {
+      setLightbar: (color) => c.lightbar.set(color),
+      setPlayerLeds: (bitmask) => c.playerLeds.set(bitmask),
+    }
+  }
 
   start(): void {
     try {
@@ -53,6 +67,8 @@ export class DualSenseDriver extends EventEmitter implements ControllerHAL {
       this.button(c.right.analog.button, 'r3')
       this.button(c.options, 'menu')
       this.button(c.create, 'view')
+      // Click only — x/y position is unused (YAGNI).
+      this.button(c.touchpad.button, 'touchpad')
 
       this.axis(c.left.analog.x, 'left_x')
       this.axis(c.left.analog.y, 'left_y')
