@@ -29,6 +29,7 @@ describe('installClaudeHooks', () => {
     expect(installClaudeHooks(settingsPath)).toBe('changed')
     const settings = read()
     for (const event of [
+      'SessionStart',
       'UserPromptSubmit',
       'Stop',
       'Notification',

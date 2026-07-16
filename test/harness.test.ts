@@ -25,6 +25,7 @@ describe('claude harness', () => {
   const ctx = { thinkingLevel: 2 }
 
   it('maps hook events to states', () => {
+    expect(claudeHarness.stateForHookEvent('SessionStart', {})).toBe('idle')
     expect(claudeHarness.stateForHookEvent('UserPromptSubmit', {})).toBe('executing')
     expect(claudeHarness.stateForHookEvent('PostToolUse', {})).toBe('executing')
     expect(claudeHarness.stateForHookEvent('Stop', {})).toBe('complete')

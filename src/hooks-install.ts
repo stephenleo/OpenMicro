@@ -89,6 +89,7 @@ function hookCommand(event: string): string {
 
 /** Event name → matcher (undefined = all). PreToolUse only fires for AskUserQuestion. */
 const HOOK_EVENTS: Record<string, string | undefined> = {
+  SessionStart: undefined, // makes a fresh idle session visible to the touchpad cycle
   UserPromptSubmit: undefined,
   Stop: undefined,
   Notification: undefined,

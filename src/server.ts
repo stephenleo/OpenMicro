@@ -18,6 +18,12 @@ import { SessionTracker } from './state.js'
 // ambiguous when several sessions share a directory, so they are ignored.
 const INSTANCE_HEADER = 'x-openmicro-instance-id'
 
+// Node's fetch (undici) kills a response body that stays silent for 300s
+// (default bodyTimeout), which tore down idle client keystroke streams and
+// dropped their sessions from the touchpad cycle. A comment frame every 25s
+// keeps the stream alive; SSE clients ignore comment lines by spec.
+const HEARTBEAT_MS = 25_000
+
 function sse(res: http.ServerResponse): void {
   res.writeHead(200, {
     'Content-Type': 'text/event-stream',
@@ -263,7 +269,10 @@ export class HostServer extends EventEmitter {
     const pending = this.pendingInstances.get(id) ?? { cwd: '', wrapperId: null }
     this.instances.set(id, { res, ...pending })
     this.pendingInstances.delete(id)
+    const heartbeat = setInterval(() => res.write(': hb\n\n'), HEARTBEAT_MS)
+    heartbeat.unref?.()
     req.on('close', () => {
+      clearInterval(heartbeat)
       const instance = this.instances.get(id)
       if (!instance) return
       this.instances.delete(id)
