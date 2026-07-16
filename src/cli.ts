@@ -8,6 +8,7 @@
 // forwards terminal keystrokes to whichever session has focus.
 
 import { randomUUID } from 'node:crypto'
+import { readFileSync } from 'node:fs'
 import { isOpenmicroHost, runAsClient } from './client.js'
 import { HidManager } from './controller/hid-manager.js'
 import { dispatchAction } from './dispatch.js'
@@ -43,6 +44,13 @@ const REPEATING: ReadonlySet<ButtonId> = new Set([
 const invocation = parseInvocation(process.argv.slice(2))
 if (invocation.help) {
   console.log(USAGE)
+  process.exit(0)
+}
+if (invocation.version) {
+  const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as {
+    version: string
+  }
+  console.log(pkg.version)
   process.exit(0)
 }
 
