@@ -26,6 +26,16 @@ jobs:
       - run: npm run verify
       - run: npm publish --access public
       # Tags alone don't show under "Releases" — create the Release object too.
-      - run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --generate-notes
+      # Notes come from the tag's CHANGELOG.md section; fall back to generated
+      # notes if the section is missing so a release never fails on a doc gap.
+      - run: |
+          awk -v ver="${GITHUB_REF_NAME#v}" \
+            '$0 ~ "^## \\[" ver "\\]" {found=1; next} /^## \[/ {found=0} found' \
+            CHANGELOG.md > release-notes.md
+          if [ -s release-notes.md ]; then
+            gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file release-notes.md
+          else
+            gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --generate-notes
+          fi
         env:
           GH_TOKEN: ${{ github.token }}
