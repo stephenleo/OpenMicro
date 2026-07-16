@@ -29,7 +29,7 @@ interface Capture {
   idle: string
 }
 interface ReplayFixture {
-  controller: { product: string; driver: string }
+  controller: { vid: string; pid: string; product: string; transport: string; driver: string }
   results: Record<string, { status: string; capture?: Capture }>
 }
 
@@ -44,6 +44,17 @@ const fixtures = loadFixtures() as unknown as ReplayFixture[]
 describe('controller fixtures replay through their parse function', () => {
   it('has at least one committed fixture', () => {
     expect(fixtures.length).toBeGreaterThan(0)
+  })
+
+  it('has no duplicate controller identities (vid+pid+transport is the dedup key)', () => {
+    const keys = fixtures.map(
+      (f) => `${f.controller.vid}-${f.controller.pid}-${f.controller.transport}`,
+    )
+    const dupes = keys.filter((k, i) => keys.indexOf(k) !== i)
+    expect(
+      dupes,
+      `duplicate fixture(s) for: ${dupes.join(', ')} — update the existing file`,
+    ).toEqual([])
   })
 
   for (const fixture of fixtures) {

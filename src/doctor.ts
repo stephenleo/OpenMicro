@@ -298,15 +298,23 @@ async function runCaptureOnly(path: string, rl: Readline): Promise<Record<string
   return results
 }
 
-/** Slugify a product+transport into a fixture filename. */
-function fixtureName(product: string, transport: string): string {
-  const slug = (s: string): string =>
-    s
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '')
-  const base = [slug(product) || 'controller', slug(transport) || 'unknown'].filter(Boolean)
-  return base.join('-') + '.json'
+/**
+ * Fixture filename from the controller's canonical identity: vid-pid-transport.
+ *
+ * VID:PID + transport is the tuple that determines the HID report layout, so it is both the fixture's identity and its dedup key — a re-submission of the same controller collides on the filename and becomes a git update to the existing fixture instead of a duplicate. Product strings are display metadata (clone pads lie about them) and live inside the JSON.
+ *
+ * Args:
+ *     vid (string): vendor id as reported, e.g. "0x054c".
+ *     pid (string): product id as reported, e.g. "0x0ce6".
+ *     transport (string): "usb" | "bluetooth" | "unknown".
+ *
+ * Returns:
+ *     string: e.g. "054c-0ce6-usb.json".
+ */
+function fixtureName(vid: string, pid: string, transport: string): string {
+  const hex = (s: string): string => s.replace(/^0x/, '').toLowerCase() || 'unknown'
+  const slug = transport.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'unknown'
+  return `${hex(vid)}-${hex(pid)}-${slug}.json`
 }
 
 /** Render a compact, paste-ready markdown summary of a report. */
@@ -444,7 +452,11 @@ function buildReport(
 
 /** Write the report/fixture file to cwd and print the markdown summary + PR hint. */
 function finishReport(report: DoctorReport): void {
-  const name = fixtureName(report.controller.product, report.controller.transport)
+  const name = fixtureName(
+    report.controller.vid,
+    report.controller.pid,
+    report.controller.transport,
+  )
   const path = join(process.cwd(), name)
   writeFileSync(path, JSON.stringify(report, null, 2) + '\n')
   console.log(`\nWrote ${path}`)
