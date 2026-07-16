@@ -19,9 +19,9 @@ Foundation: vendored modules from `/Users/stephenleo/Developer/vibesense` (same 
 
 ## Architecture
 
-`open-micro [claude|codex] [...args]` wraps the agent CLI in a pty (vibesense pattern). First instance = host (binds port **48762**, owns controller + session aggregation); later instances = clients (register, receive forwarded keystrokes over SSE). Agent lifecycle hooks POST to `http://127.0.0.1:48762/hook/<event>`.
+`open-micro [claude|codex] [...args]` wraps the agent CLI in a pty (vibesense pattern). First instance = host (binds port **48762**, owns controller + session aggregation); later instances = clients (register, receive forwarded keystrokes over SSE). Agent lifecycle hooks POST to `http://127.0.0.1:48762/om-hook/<event>`.
 
-**IMPORTANT — coexistence with vibesense:** different port (48762, not 48753) AND hooks-install must identify _its own_ entries by full base-URL marker (`127.0.0.1:48762/hook/`), never bare `/hook/`, so the two tools' idempotent installers can't purge each other.
+**IMPORTANT — coexistence with vibesense (verified in Phase 2):** vibesense's installer purges any hook command containing the bare substring `/hook/`, so open-micro uses path `/om-hook/` (which does not contain `/hook/`) on port 48762, and identifies its own entries by the full marker `127.0.0.1:48762/om-hook/`. Phase 4's server must route `/om-hook/<event>`. Constants live once in `src/ports.ts`.
 
 ### The harness contract (`src/harness/types.ts`) — the only place agent-specific knowledge lives
 

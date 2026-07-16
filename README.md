@@ -1,3 +1,5 @@
+<p align="center"><img src="assets/open-micro-logo.png" alt="open-micro" width="220"></p>
+
 # open-micro
 
 Codex Micro, replicated 100% in software with a consumer gamepad. Wrap Claude Code or Codex CLI (`open-micro claude` / `open-micro codex`) and drive it with a DualSense: face buttons accept/reject/push-to-talk/new-chat, left-stick flicks launch workflow presets, right-stick rotation is the thinking-depth dial, the lightbar and player LEDs show live agent status, and the touchpad cycles between sessions. Harness-agnostic — add any other agent CLI via the public `open-micro/harness` API.
