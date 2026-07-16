@@ -84,7 +84,7 @@ if (install.trustNotice) console.error(install.trustNotice)
 
 const wrapperId = randomUUID()
 
-const server = new HostServer(harness, process.cwd(), wrapperId)
+const server = new HostServer(harness, wrapperId)
 const isHost = await server.listen(HOST_PORT)
 
 let hid: HidManager | null = null
@@ -201,10 +201,16 @@ if (!isHost) {
     setLayer: (index) => router.setLayer(index),
   }
 
+  let lastAutoFocusId: string | null = null
   server.on('aggregate', (agg: Aggregate) => {
-    // Sticky focus: when nobody needs attention, keep routing to the session
-    // that last did instead of snapping back to the host's own pty.
-    focusSessionId = agg.focusSessionId ?? focusSessionId
+    // A session newly demanding attention pulls focus once; after that the
+    // user's manual (touchpad) pick wins. Re-asserting the same stale
+    // attention id on every hook event would undo the touchpad press.
+    // When nobody needs attention, keep routing to the session that last did.
+    if (agg.focusSessionId && agg.focusSessionId !== lastAutoFocusId) {
+      focusSessionId = agg.focusSessionId
+    }
+    lastAutoFocusId = agg.focusSessionId
     scheduleFeedback()
   })
 

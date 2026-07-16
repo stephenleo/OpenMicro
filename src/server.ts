@@ -12,8 +12,10 @@ import { logger } from './logger.js'
 import { HOOK_PATH, HOST_URL } from './ports.js'
 import { SessionTracker } from './state.js'
 
-// Client hooks that carry an ownership header identify themselves precisely;
-// header-less Claude hooks fall back to cwd correlation (see handleHook).
+// Every wrapped agent's hooks carry this ownership header (the pty exports
+// OPENMICRO_INSTANCE_ID to the agent, and hook commands run with the agent's
+// env). Header-less hooks come from sessions openmicro never wrapped — cwd is
+// ambiguous when several sessions share a directory, so they are ignored.
 const INSTANCE_HEADER = 'x-openmicro-instance-id'
 
 function sse(res: http.ServerResponse): void {
@@ -45,16 +47,9 @@ function readBody(req: http.IncomingMessage): Promise<string> {
  */
 export class HostServer extends EventEmitter {
   readonly tracker: SessionTracker
-  /** session_id → cwd, learned from hook payloads, used to route keystrokes to instances. */
-  readonly sessionCwds = new Map<string, string>()
-  /** session_id → opaque wrapper id for harnesses that provide exact ownership. */
+  /** session_id → wrapper id, learned from hook ownership headers. */
   readonly sessionOwners = new Map<string, string>()
-  /** Cwds of every client instance that ever registered. Append-only: a live
-   * session must keep driving the FSM (and deliver its SessionEnd) even if its
-   * instance's SSE connection drops. */
-  private knownCwds = new Set<string>()
-  /** Which harness classifies a session's hooks, resolved from /register. */
-  private cwdHarness = new Map<string, Harness>()
+  /** Which harness classifies a wrapper's hooks, resolved from /register. */
   private wrapperHarness = new Map<string, Harness>()
 
   private server: http.Server | null = null
@@ -66,16 +61,14 @@ export class HostServer extends EventEmitter {
   private nextInstanceId = 1
 
   /**
-   * hostHarness classifies the host's own session's hooks (and any client's
-   * header-less hooks whose cwd matches a harness we never saw a /register for).
-   * hostCwd/hostWrapperId scope which sessions are trusted to drive the FSM:
-   * globally-installed hooks fire from every agent session on the machine, and a
-   * foreign session stuck 'waiting' would otherwise pin state forever. Unset
-   * (tests): no filtering.
+   * hostHarness classifies the host's own session's hooks (and any hook whose
+   * wrapper we never saw a /register for). hostWrapperId scopes which sessions
+   * are trusted to drive the FSM: globally-installed hooks fire from every
+   * agent session on the machine, and a foreign session stuck 'waiting' would
+   * otherwise pin state forever. Unset (tests): no filtering.
    */
   constructor(
     private readonly hostHarness: Harness,
-    private readonly hostCwd?: string,
     private readonly hostWrapperId?: string,
   ) {
     super()
@@ -83,7 +76,6 @@ export class HostServer extends EventEmitter {
       onChange: () => this.emit('aggregate', this.tracker.aggregate()),
     })
     if (hostWrapperId) this.wrapperHarness.set(hostWrapperId, hostHarness)
-    if (hostCwd) this.cwdHarness.set(hostCwd, hostHarness)
   }
 
   /** Port actually bound (differs from HOST_PORT only in tests using port 0). */
@@ -125,14 +117,6 @@ export class HostServer extends EventEmitter {
     return true
   }
 
-  /** Should this session drive the FSM? Ours = host cwd or a registered instance's. */
-  private isTrustedSession(sessionId: string): boolean {
-    if (!this.hostCwd) return true // filtering off (bare server in tests)
-    const cwd = this.sessionCwds.get(sessionId)
-    if (!cwd) return false
-    return cwd === this.hostCwd || this.knownCwds.has(cwd)
-  }
-
   private isActiveOwner(wrapperId: string): boolean {
     if (wrapperId === this.hostWrapperId) return true
     for (const instance of this.instances.values()) {
@@ -141,19 +125,12 @@ export class HostServer extends EventEmitter {
     return false
   }
 
-  /** Find the client instance whose ownership/cwd matches the given session. */
+  /** Find the client instance that owns the given session (null = host's own pty). */
   instanceForSession(sessionId: string): string | null {
     const owner = this.sessionOwners.get(sessionId)
-    if (owner) {
-      for (const [id, instance] of this.instances) {
-        if (instance.wrapperId === owner) return id
-      }
-      return null
-    }
-    const cwd = this.sessionCwds.get(sessionId)
-    if (!cwd) return null
+    if (!owner) return null
     for (const [id, instance] of this.instances) {
-      if (instance.cwd === cwd) return id
+      if (instance.wrapperId === owner) return id
     }
     return null
   }
@@ -164,7 +141,6 @@ export class HostServer extends EventEmitter {
       if (owner !== wrapperId) continue
       removed = this.tracker.remove(sessionId) || removed
       this.sessionOwners.delete(sessionId)
-      this.sessionCwds.delete(sessionId)
     }
     return removed
   }
@@ -205,13 +181,10 @@ export class HostServer extends EventEmitter {
   ): Promise<void> {
     const body = await readBody(req)
     let sessionId = 'unknown'
-    let cwd: string | undefined
     let payload: unknown
     try {
       payload = JSON.parse(body)
-      const parsed = payload as { session_id?: string; cwd?: string }
-      sessionId = parsed.session_id ?? 'unknown'
-      cwd = parsed.cwd
+      sessionId = (payload as { session_id?: string }).session_id ?? 'unknown'
     } catch {
       // Payload shape is the harness's internal contract — event name alone still works.
     }
@@ -219,21 +192,18 @@ export class HostServer extends EventEmitter {
     const header = req.headers[INSTANCE_HEADER]
     const wrapperId = Array.isArray(header) ? header[0] : header
 
-    // Resolve trust + the harness that classifies this session's events.
+    // Only sessions owned by an active wrapper (the host's own agent or a
+    // registered client) drive the FSM. Header-less hooks come from agent
+    // sessions openmicro never wrapped; when scoping is on they are ignored —
+    // cwd cannot disambiguate sessions sharing a directory.
     let trusted: boolean
-    let harness: Harness
+    let harness: Harness = this.hostHarness
     if (wrapperId) {
       trusted = this.isActiveOwner(wrapperId)
       harness = this.wrapperHarness.get(wrapperId) ?? this.hostHarness
-      if (trusted) {
-        this.sessionOwners.set(sessionId, wrapperId)
-        if (cwd) this.sessionCwds.set(sessionId, cwd)
-      }
+      if (trusted) this.sessionOwners.set(sessionId, wrapperId)
     } else {
-      // Header-less (Claude) hook: correlate + classify by cwd, like vibesense.
-      if (cwd) this.sessionCwds.set(sessionId, cwd)
-      trusted = this.isTrustedSession(sessionId)
-      harness = (cwd ? this.cwdHarness.get(cwd) : undefined) ?? this.hostHarness
+      trusted = !this.hostWrapperId // filtering off (bare server in tests)
     }
 
     if (trusted) {
@@ -274,10 +244,6 @@ export class HostServer extends EventEmitter {
       } catch {
         // Unknown kind from a client — classify with the host harness as a fallback.
       }
-    }
-    if (cwd) {
-      this.knownCwds.add(cwd)
-      this.cwdHarness.set(cwd, harness)
     }
     if (wrapperId) this.wrapperHarness.set(wrapperId, harness)
     const id = String(this.nextInstanceId++)

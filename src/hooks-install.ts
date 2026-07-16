@@ -77,8 +77,14 @@ function updateHookFile(options: HookFileOptions): HookWriteResult {
 // vibesense's (different port) or any bare `/hook/` webhook.
 const COMMAND_MARKER = `127.0.0.1:${HOST_PORT}${new URL(HOOK_URL).pathname}`
 
+// Ownership header: hook commands run with the agent process env, and the pty
+// spawns every wrapped agent with OPENMICRO_INSTANCE_ID set. Wrapped sessions
+// therefore self-identify; in an unwrapped session the var is empty and curl
+// drops the header, so the host ignores it (see server.ts handleHook).
+const OM_HEADER = 'X-Openmicro-Instance-Id'
+
 function hookCommand(event: string): string {
-  return `curl -s --max-time 1 -X POST ${HOOK_URL}${event} -H 'Content-Type: application/json' -d @- >/dev/null 2>&1 || true`
+  return `curl -s --max-time 1 -X POST ${HOOK_URL}${event} -H 'Content-Type: application/json' -H "${OM_HEADER}: $OPENMICRO_INSTANCE_ID" -d @- >/dev/null 2>&1 || true`
 }
 
 /** Event name → matcher (undefined = all). PreToolUse only fires for AskUserQuestion. */
@@ -143,7 +149,6 @@ export function installClaudeHooks(settingsPath?: string): HookWriteResult {
 }
 
 const CODEX_HOOK_EVENTS = ['UserPromptSubmit', 'PermissionRequest', 'PostToolUse', 'Stop'] as const
-const OM_HEADER = 'X-Openmicro-Instance-Id'
 
 function codexHookCommand(event: string): string {
   return `curl -s --max-time 1 -X POST ${HOOK_URL}${event} -H 'Content-Type: application/json' -H "${OM_HEADER}: $OPENMICRO_INSTANCE_ID" -d @- >/dev/null 2>&1 || true; printf '{}'`

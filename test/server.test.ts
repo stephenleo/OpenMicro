@@ -82,15 +82,15 @@ describe('HostServer', () => {
     expect(aggregates.at(-1)).toEqual({ playing: false, focusSessionId: null })
   })
 
-  it('forwards keystrokes to a registered instance by session cwd', async () => {
+  it('forwards keystrokes to the instance that owns the session', async () => {
     const reg = await fetch(`${base}/register`, {
       method: 'POST',
-      body: JSON.stringify({ cwd: '/tmp/project-a' }),
+      body: JSON.stringify({ cwd: '/tmp/project-a', wrapperId: 'wrap-a', kind: 'claude' }),
     })
     const { instanceId } = (await reg.json()) as { instanceId: string }
 
     const stream = await fetch(`${base}/instance/${instanceId}`)
-    await postHook('Notification', 'sess-a', { cwd: '/tmp/project-a' })
+    await postOwnedHook('Notification', 'sess-a', 'wrap-a', { cwd: '/tmp/project-a' })
 
     expect(server.instanceForSession('sess-a')).toBe(instanceId)
     expect(server.sendKeysToInstance(instanceId, '\r')).toBe(true)
@@ -107,7 +107,7 @@ describe('HostServer', () => {
   it('classifies each session with its own registered harness kind', async () => {
     // Claude has no PermissionRequest event (→ null), Codex maps it to waiting.
     // Registering the instance as codex must make PermissionRequest pause.
-    const scoped = new HostServer(claude, '/tmp/host', 'host-wrapper')
+    const scoped = new HostServer(claude, 'host-wrapper')
     await scoped.listen(0)
     const scopedBase = `http://127.0.0.1:${scoped.boundPort}`
     const aggregates: Aggregate[] = []
@@ -132,7 +132,7 @@ describe('HostServer', () => {
   })
 
   it('accepts owned host hooks and ignores unknown wrapper IDs', async () => {
-    const owned = new HostServer(claude, '/tmp/shared', 'host-wrapper')
+    const owned = new HostServer(claude, 'host-wrapper')
     await owned.listen(0)
     const ownedBase = `http://127.0.0.1:${owned.boundPort}`
     const aggregates: Aggregate[] = []
@@ -203,41 +203,35 @@ describe('HostServer', () => {
     controllerA.abort()
     await expect.poll(() => server.tracker.aggregate().focusSessionId).toBe('session-b')
     expect(server.sessionOwners.has('session-a')).toBe(false)
-    expect(server.sessionCwds.has('session-a')).toBe(false)
     expect(server.sessionOwners.get('session-b')).toBe('wrapper-b')
     controllerB.abort()
   })
 
-  it('ignores hook events from sessions outside the wrapped cwds', async () => {
-    // Global hooks fire from every agent session on the machine; a foreign
-    // session (e.g. a headless observer) going 'waiting' must not pin state.
-    const scoped = new HostServer(claude, '/tmp/host-project')
+  it('ignores header-less hook events from sessions openmicro never wrapped', async () => {
+    // Global hooks fire from every agent session on the machine. An unwrapped
+    // session has no OPENMICRO_INSTANCE_ID, so its hooks carry no ownership
+    // header — it must not enter the tracker (it would pollute focus cycling
+    // and pin state), even when its cwd matches a wrapped session's.
+    const scoped = new HostServer(claude, 'host-wrapper')
     await scoped.listen(0)
     const scopedBase = `http://127.0.0.1:${scoped.boundPort}`
     const aggregates: Aggregate[] = []
     scoped.on('aggregate', (a: Aggregate) => aggregates.push(a))
-    const post = (event: string, body: Record<string, unknown>) =>
-      fetch(`${scopedBase}/om-hook/${event}`, { method: 'POST', body: JSON.stringify(body) })
+    const post = (event: string, body: Record<string, unknown>, wrapperId?: string) =>
+      fetch(`${scopedBase}/om-hook/${event}`, {
+        method: 'POST',
+        ...(wrapperId ? { headers: { 'X-Openmicro-Instance-Id': wrapperId } } : {}),
+        body: JSON.stringify(body),
+      })
 
     try {
-      await post('UserPromptSubmit', { session_id: 'ours', cwd: '/tmp/host-project' })
+      await post('UserPromptSubmit', { session_id: 'ours', cwd: '/tmp/host' }, 'host-wrapper')
       expect(aggregates.at(-1)).toEqual({ playing: true, focusSessionId: null })
 
-      // Foreign observer goes 'waiting' — without scoping this pauses forever.
-      await post('Notification', { session_id: 'observer', cwd: '/tmp/unrelated' })
+      // Unwrapped observer in the same cwd goes 'waiting' — must not pin state.
+      await post('Notification', { session_id: 'observer', cwd: '/tmp/host' })
       expect(aggregates.at(-1)).toEqual({ playing: true, focusSessionId: null })
-
-      // Missing cwd is also untrusted once scoping is on.
-      await post('Notification', { session_id: 'no-cwd' })
-      expect(aggregates.at(-1)).toEqual({ playing: true, focusSessionId: null })
-
-      // A registered client instance's cwd is trusted like the host's own.
-      await fetch(`${scopedBase}/register`, {
-        method: 'POST',
-        body: JSON.stringify({ cwd: '/tmp/client-project', kind: 'claude' }),
-      })
-      await post('PreToolUse', { session_id: 'client-sess', cwd: '/tmp/client-project' })
-      expect(aggregates.at(-1)).toEqual({ playing: false, focusSessionId: 'client-sess' })
+      expect(scoped.sessionOwners.has('observer')).toBe(false)
     } finally {
       scoped.close()
     }

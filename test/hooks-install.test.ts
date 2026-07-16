@@ -46,7 +46,7 @@ describe('installClaudeHooks', () => {
     installClaudeHooks(settingsPath)
     const command = read().hooks.Stop![0]!.hooks[0]!.command
     expect(command).toBe(
-      "curl -s --max-time 1 -X POST http://127.0.0.1:48762/om-hook/Stop -H 'Content-Type: application/json' -d @- >/dev/null 2>&1 || true",
+      'curl -s --max-time 1 -X POST http://127.0.0.1:48762/om-hook/Stop -H \'Content-Type: application/json\' -H "X-Openmicro-Instance-Id: $OPENMICRO_INSTANCE_ID" -d @- >/dev/null 2>&1 || true',
     )
     // Coexistence guard: vibesense purges any command containing the bare
     // substring `/hook/`. Ours must never contain it.
