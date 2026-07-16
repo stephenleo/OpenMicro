@@ -12,6 +12,8 @@ export interface ParsedInvocation {
   agentArgs: string[]
   /** True when `--help`/`-h` was requested (cli prints usage and exits). */
   help: boolean
+  /** True when `--version`/`-V` was requested (cli prints openmicro's version and exits). */
+  version: boolean
   /** True when the `doctor` subcommand was requested (cli runs the diagnostic and exits). */
   doctor: boolean
 }
@@ -28,18 +30,24 @@ const DEFAULT_KIND = 'claude'
  *     ParsedInvocation: kind + forwarded args + help flag.
  */
 export function parseInvocation(args: string[]): ParsedInvocation {
+  const base = { kind: DEFAULT_KIND, agentArgs: [], help: false, version: false, doctor: false }
   if (args[0] === '--help' || args[0] === '-h') {
-    return { kind: DEFAULT_KIND, agentArgs: [], help: true, doctor: false }
+    return { ...base, help: true }
+  }
+  // Leading --version/-V reports openmicro's own version. To query the agent's
+  // instead, name it: `openmicro claude --version`.
+  if (args[0] === '--version' || args[0] === '-V' || args[0] === '-v') {
+    return { ...base, version: true }
   }
   if (args[0] === 'doctor') {
-    return { kind: DEFAULT_KIND, agentArgs: [], help: false, doctor: true }
+    return { ...base, doctor: true }
   }
   // A leading bare word names the harness; a leading flag (or nothing) means
   // "default harness, these are its args".
   if (args.length > 0 && args[0] !== undefined && !args[0].startsWith('-')) {
-    return { kind: args[0], agentArgs: args.slice(1), help: false, doctor: false }
+    return { ...base, kind: args[0], agentArgs: args.slice(1) }
   }
-  return { kind: DEFAULT_KIND, agentArgs: args, help: false, doctor: false }
+  return { ...base, agentArgs: args }
 }
 
 export const USAGE = `openmicro — drive an AI agent CLI with a game controller.
@@ -47,6 +55,7 @@ export const USAGE = `openmicro — drive an AI agent CLI with a game controller
 Usage:
   openmicro [claude|codex] [...agent args]   Wrap the agent CLI (default: claude)
   openmicro doctor                           Diagnose your controller, write a report
+  openmicro --version                        Show openmicro's version
   openmicro --help                           Show this message
 
 The first instance to start becomes the host: it owns the controller and

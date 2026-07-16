@@ -10,6 +10,7 @@ describe('parseInvocation', () => {
       kind: 'claude',
       agentArgs: [],
       help: false,
+      version: false,
       doctor: false,
     })
   })
@@ -19,6 +20,7 @@ describe('parseInvocation', () => {
       kind: 'claude',
       agentArgs: ['--resume', 'x'],
       help: false,
+      version: false,
       doctor: false,
     })
   })
@@ -28,6 +30,7 @@ describe('parseInvocation', () => {
       kind: 'codex',
       agentArgs: ['--foo'],
       help: false,
+      version: false,
       doctor: false,
     })
   })
@@ -37,6 +40,7 @@ describe('parseInvocation', () => {
       kind: 'gemini',
       agentArgs: [],
       help: false,
+      version: false,
       doctor: false,
     })
   })
@@ -51,7 +55,22 @@ describe('parseInvocation', () => {
       kind: 'claude',
       agentArgs: [],
       help: false,
+      version: false,
       doctor: true,
     })
+  })
+})
+
+describe('--version', () => {
+  it.each([['--version'], ['-V'], ['-v']])('%s reports openmicro, not the agent', (flag) => {
+    const parsed = parseInvocation([flag])
+    expect(parsed.version).toBe(true)
+    expect(parsed.agentArgs).toEqual([])
+  })
+
+  it('passes --version through when a harness is named', () => {
+    const parsed = parseInvocation(['claude', '--version'])
+    expect(parsed.version).toBe(false)
+    expect(parsed.agentArgs).toEqual(['--version'])
   })
 })
