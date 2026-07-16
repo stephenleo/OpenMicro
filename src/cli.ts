@@ -1,3 +1,3 @@
 #!/usr/bin/env node
 
-console.log('open-micro: not yet implemented')
+console.log('openmicro: not yet implemented')

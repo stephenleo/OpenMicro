@@ -1,4 +1,4 @@
-// Public harness API + built-in registry. Exposed as `open-micro/harness` via
+// Public harness API + built-in registry. Exposed as `openmicro/harness` via
 // the package exports map. Third-party harnesses (Gemini CLI, opencode, …)
 // register at runtime without forking — hence AgentKind widens to `string` at
 // this boundary.
@@ -30,7 +30,7 @@ export function harnessFor(kind: string): Harness {
   const harness = registry.get(kind)
   if (!harness) {
     const known = [...registry.keys()].join(', ')
-    throw new Error(`open-micro: unknown harness '${kind}'. Known harnesses: ${known}`)
+    throw new Error(`openmicro: unknown harness '${kind}'. Known harnesses: ${known}`)
   }
   return harness
 }

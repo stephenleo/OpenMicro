@@ -1,16 +1,16 @@
 {
-  "name": "open-micro",
+  "name": "openmicro",
   "version": "0.1.0",
   "description": "Open-source replica of Work Louder's Codex Micro using a consumer gamepad as the physical AI-agent controller.",
   "license": "Apache-2.0",
   "author": "stephenleo",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/stephenleo/open-micro.git"
+    "url": "git+https://github.com/stephenleo/OpenMicro.git"
   },
   "type": "module",
   "bin": {
-    "open-micro": "dist/cli.js"
+    "openmicro": "dist/cli.js"
   },
   "exports": {
     ".": {

@@ -1,5 +1,5 @@
 // User config: 6 remappable layers + workflow prompt presets, persisted at
-// ~/.open-micro/config.json (zod-validated, atomic tmp+rename like
+// ~/.openmicro/config.json (zod-validated, atomic tmp+rename like
 // hooks-install.ts). Layer 0 ships the Codex Micro parity bindings from
 // PLAN.md; layers 1-5 are blank canvases the user fills in via the config
 // file. A missing file self-seeds with DEFAULT_CONFIG; an invalid file is
@@ -172,7 +172,7 @@ export const DEFAULT_CONFIG: OpenMicroConfig = {
 }
 
 function defaultConfigPath(): string {
-  return path.join(os.homedir(), '.open-micro', 'config.json')
+  return path.join(os.homedir(), '.openmicro', 'config.json')
 }
 
 /**
@@ -180,7 +180,7 @@ function defaultConfigPath(): string {
  *
  * Args:
  *     config (OpenMicroConfig): Config to persist.
- *     configPath (string): Target path. Defaults to ~/.open-micro/config.json.
+ *     configPath (string): Target path. Defaults to ~/.openmicro/config.json.
  *
  * Returns:
  *     None.
@@ -199,7 +199,7 @@ export function saveConfig(
  * Load the config, seeding a fresh DEFAULT_CONFIG file when none exists.
  *
  * Args:
- *     configPath (string): Target path. Defaults to ~/.open-micro/config.json.
+ *     configPath (string): Target path. Defaults to ~/.openmicro/config.json.
  *
  * Returns:
  *     OpenMicroConfig: The loaded (or freshly-seeded default) config.
@@ -224,14 +224,14 @@ export function loadConfig(configPath: string = defaultConfigPath()): OpenMicroC
     parsed = JSON.parse(raw)
   } catch (err) {
     throw new Error(
-      `open-micro: config at ${configPath} is not valid JSON: ${(err as Error).message}`,
+      `openmicro: config at ${configPath} is not valid JSON: ${(err as Error).message}`,
     )
   }
 
   const result = configSchema.safeParse(parsed)
   if (!result.success) {
     const issues = result.error.issues.map((i) => `${i.path.join('.') || '(root)'}: ${i.message}`)
-    throw new Error(`open-micro: invalid config at ${configPath}:\n${issues.join('\n')}`)
+    throw new Error(`openmicro: invalid config at ${configPath}:\n${issues.join('\n')}`)
   }
   return result.data as OpenMicroConfig
 }

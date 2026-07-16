@@ -1,12 +1,12 @@
 // Idempotent hook registration for Claude Code (~/.claude/settings.json) and
 // Codex (~/.codex/hooks.json). Merge/purge/atomic-write logic ported from
 // vibesense. The hook command is a curl POST that no-ops harmlessly when
-// open-micro isn't running, so hooks never need uninstalling.
+// openmicro isn't running, so hooks never need uninstalling.
 //
 // COEXISTENCE WITH VIBESENSE: vibesense's Claude installer identifies "its own"
 // entries by the bare substring `/hook/` and purges everything matching it. If
-// open-micro used `/hook/` too, vibesense would delete our entries on its next
-// run. So open-micro posts to `/om-hook/` (HOOK_PATH) — which does NOT contain
+// openmicro used `/hook/` too, vibesense would delete our entries on its next
+// run. So openmicro posts to `/om-hook/` (HOOK_PATH) — which does NOT contain
 // the substring `/hook/` — and identifies its own entries by the full base-URL
 // marker `127.0.0.1:48762/om-hook/`. Neither tool matches the other's entries.
 
@@ -99,8 +99,8 @@ function isOurs(group: HookGroup): boolean {
 }
 
 /**
- * Merge open-micro Claude hook entries into settingsPath (default
- * ~/.claude/settings.json), replacing stale open-micro entries and preserving
+ * Merge openmicro Claude hook entries into settingsPath (default
+ * ~/.claude/settings.json), replacing stale openmicro entries and preserving
  * everything else. Atomic write via tmp + rename. Never throws.
  *
  * Args:
@@ -114,7 +114,7 @@ export function installClaudeHooks(settingsPath?: string): HookWriteResult {
 
   return updateHookFile({
     target,
-    temporaryPath: `${target}.open-micro-tmp`,
+    temporaryPath: `${target}.openmicro-tmp`,
     parseWarning: 'hooks-install: could not parse settings.json — leaving it untouched',
     writeWarning: 'hooks-install: failed to write settings.json',
     successMessage: 'hooks-install: Claude Code hooks registered',
@@ -143,10 +143,10 @@ export function installClaudeHooks(settingsPath?: string): HookWriteResult {
 }
 
 const CODEX_HOOK_EVENTS = ['UserPromptSubmit', 'PermissionRequest', 'PostToolUse', 'Stop'] as const
-const OM_HEADER = 'X-Open-Micro-Instance-Id'
+const OM_HEADER = 'X-Openmicro-Instance-Id'
 
 function codexHookCommand(event: string): string {
-  return `curl -s --max-time 1 -X POST ${HOOK_URL}${event} -H 'Content-Type: application/json' -H "${OM_HEADER}: $OPEN_MICRO_INSTANCE_ID" -d @- >/dev/null 2>&1 || true; printf '{}'`
+  return `curl -s --max-time 1 -X POST ${HOOK_URL}${event} -H 'Content-Type: application/json' -H "${OM_HEADER}: $OPENMICRO_INSTANCE_ID" -d @- >/dev/null 2>&1 || true; printf '{}'`
 }
 
 function isCodexOurs(group: unknown): boolean {
@@ -179,7 +179,7 @@ export function installCodexHooks(hooksPath?: string): HookWriteResult {
 
   return updateHookFile({
     target,
-    temporaryPath: `${target}.${process.pid}.open-micro-tmp`,
+    temporaryPath: `${target}.${process.pid}.openmicro-tmp`,
     parseWarning: 'hooks-install: could not parse Codex hooks.json — leaving it untouched',
     writeWarning: 'hooks-install: failed to write Codex hooks.json',
     successMessage: 'hooks-install: Codex hooks registered',
@@ -187,7 +187,7 @@ export function installCodexHooks(hooksPath?: string): HookWriteResult {
       if (!settings.hooks || typeof settings.hooks !== 'object') settings.hooks = {}
       const before = JSON.stringify(settings)
 
-      // Purge only positively identified open-micro entries. Preserve every
+      // Purge only positively identified openmicro entries. Preserve every
       // foreign array element verbatim, including extension shapes we do not know.
       for (const [event, value] of Object.entries(settings.hooks)) {
         if (!Array.isArray(value)) continue

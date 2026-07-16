@@ -10,7 +10,7 @@ let configPath: string
 let realHome: string | undefined
 
 beforeEach(() => {
-  dir = fs.mkdtempSync(path.join(os.tmpdir(), 'open-micro-config-'))
+  dir = fs.mkdtempSync(path.join(os.tmpdir(), 'openmicro-config-'))
   configPath = path.join(dir, 'config.json')
   realHome = process.env.HOME
 })
@@ -29,11 +29,11 @@ describe('loadConfig / saveConfig', () => {
     expect(JSON.parse(fs.readFileSync(configPath, 'utf8'))).toEqual(DEFAULT_CONFIG)
   })
 
-  it('defaults to ~/.open-micro/config.json, respecting a HOME override', () => {
+  it('defaults to ~/.openmicro/config.json, respecting a HOME override', () => {
     process.env.HOME = dir
     const config = loadConfig()
     expect(config).toEqual(DEFAULT_CONFIG)
-    expect(fs.existsSync(path.join(dir, '.open-micro', 'config.json'))).toBe(true)
+    expect(fs.existsSync(path.join(dir, '.openmicro', 'config.json'))).toBe(true)
   })
 
   it('round-trips a saved config exactly', () => {

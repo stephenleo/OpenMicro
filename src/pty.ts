@@ -44,7 +44,7 @@ export function spawnAgentProcess(
     cols: process.stdout.columns,
     rows: process.stdout.rows,
     cwd: process.cwd(),
-    env: (wrapperId ? { ...process.env, VIBESENSE_INSTANCE_ID: wrapperId } : process.env) as Record<
+    env: (wrapperId ? { ...process.env, OPENMICRO_INSTANCE_ID: wrapperId } : process.env) as Record<
       string,
       string
     >,

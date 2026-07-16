@@ -1,8 +1,14 @@
-<p align="center"><img src="assets/open-micro-logo.png" alt="open-micro" width="220"></p>
+<p align="center"><img src="assets/open-micro-logo.png" alt="OpenMicro" width="220"></p>
 
-# open-micro
+<p align="center">
+  <a href="https://www.npmjs.com/package/openmicro"><img src="https://img.shields.io/npm/dm/openmicro?style=flat" alt="npm downloads"></a>
+  <a href="https://github.com/stephenleo/OpenMicro/stargazers"><img src="https://img.shields.io/github/stars/stephenleo/OpenMicro?style=flat" alt="GitHub stars"></a>
+  <a href="https://github.com/stephenleo/OpenMicro/forks"><img src="https://img.shields.io/github/forks/stephenleo/OpenMicro?style=flat" alt="GitHub forks"></a>
+</p>
 
-Codex Micro, replicated 100% in software with a consumer gamepad. Wrap Claude Code or Codex CLI (`open-micro claude` / `open-micro codex`) and drive it with a DualSense: face buttons accept/reject/push-to-talk/new-chat, left-stick flicks launch workflow presets, right-stick rotation is the thinking-depth dial, the lightbar and player LEDs show live agent status, and the touchpad cycles between sessions. Harness-agnostic — add any other agent CLI via the public `open-micro/harness` API.
+# OpenMicro
+
+Codex Micro, replicated 100% in software with a consumer gamepad. Wrap Claude Code or Codex CLI (`openmicro claude` / `openmicro codex`) and drive it with a DualSense: face buttons accept/reject/push-to-talk/new-chat, left-stick flicks launch workflow presets, right-stick rotation is the thinking-depth dial, the lightbar and player LEDs show live agent status, and the touchpad cycles between sessions. Harness-agnostic — add any other agent CLI via the public `openmicro/harness` API.
 
 _(Full docs land with the initial release — see PLAN.md meanwhile.)_
 
