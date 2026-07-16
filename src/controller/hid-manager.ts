@@ -7,6 +7,7 @@ import type { Device } from 'node-hid'
 import { logger } from '../logger.js'
 import { Deduper } from './hal.js'
 import type { ControllerHAL } from './hal.js'
+import type { ControllerOutput } from './output.js'
 import { DualSenseDriver } from './dualsense-driver.js'
 import { DS4_PIDS, DS4_VID, parseDs4Report } from './ds4-driver.js'
 import { parseGenericReport } from './generic-driver.js'
@@ -60,6 +61,11 @@ export class HidManager extends EventEmitter {
   private deduper = new Deduper()
   private pollTimer: ReturnType<typeof setInterval> | null = null
   private stopped = false
+
+  /** Live output surface of the active driver (DualSense only), or undefined. */
+  get output(): ControllerOutput | undefined {
+    return this.driver?.output
+  }
 
   start(): void {
     this.stopped = false

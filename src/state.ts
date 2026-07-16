@@ -77,6 +77,18 @@ export class SessionTracker {
   }
 
   /**
+   * Ordered snapshot of every tracked session, oldest first — for feedback rendering.
+   *
+   * Returns:
+   *     { id: string; state: AgentState }[]: Sessions in stable slot order.
+   */
+  list(): { id: string; state: AgentState }[] {
+    return [...this.sessions.entries()]
+      .sort((a, b) => a[1].order - b[1].order)
+      .map(([id, s]) => ({ id, state: s.state }))
+  }
+
+  /**
    * Remove a session (e.g. on SessionEnd) so a dead waiter cannot pause forever.
    *
    * Args:

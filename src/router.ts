@@ -188,6 +188,11 @@ export class LayerRouter {
     return this.layer
   }
 
+  /** Switch layer from a bound `{ type: 'layer' }` action (opens the same guard window). */
+  setLayer(index: number): void {
+    this.switchLayer(index)
+  }
+
   route(event: ControllerEvent): Action | null {
     if (event.kind === 'button') return this.routeButton(event.button, event.pressed)
     if (event.kind === 'axis') return this.routeAxis(event.axis, event.value)
