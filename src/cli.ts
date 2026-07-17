@@ -170,27 +170,39 @@ if (!isHost) {
     const current = herdrWorkspaceId === null ? -1 : ids.indexOf(herdrWorkspaceId)
     herdrWorkspaceId = ids[current + 1] ?? null // past the end (or vanished ws) → local mode
     herdrAgentTarget = null
-    if (herdrWorkspaceId) void focusWorkspace(herdrWorkspaceId)
+    if (herdrWorkspaceId) {
+      await focusWorkspace(herdrWorkspaceId)
+      // Entering a space must also retarget voice/keys, else writeToFocused
+      // keeps sending to the previously-focused session in another space.
+      await cycleHerdrAgent()
+    }
   }
 
   /** Touchpad while a herdr space is selected: cycle the space's agents in herdr. */
   async function cycleHerdrAgent(): Promise<void> {
     const agents = (await listAgents()).filter((a) => a.workspace_id === herdrWorkspaceId)
-    if (agents.length === 0) return
+    if (agents.length === 0) {
+      // Empty space: keeping the old focus would spill voice into another space.
+      focusSessionId = null
+      scheduleFeedback()
+      return
+    }
     const current = agents.findIndex((a) => a.terminal_id === herdrAgentTarget)
     const next = agents[(current + 1) % agents.length]!
     herdrAgentTarget = next.terminal_id
     void focusAgent(next.terminal_id)
     // Voice/keys must follow the herdr pick: retarget input routing to the
-    // session hosted in that pane, else writeToFocused keeps sending to the
-    // previously-focused session — possibly in another space.
+    // session hosted in that pane. No session in that pane (foreign agent) →
+    // clear focus rather than keep spilling into a stale session elsewhere.
+    let matched: string | null = null
     for (const [sessionId, paneId] of server.sessionPanes) {
       if (paneId === next.pane_id) {
-        focusSessionId = sessionId
-        scheduleFeedback()
+        matched = sessionId
         break
       }
     }
+    focusSessionId = matched
+    scheduleFeedback()
   }
 
   /** Change focus: index -1 cycles to the next tracked session, else jumps to a slot. */
