@@ -1,6 +1,6 @@
 # Controller compatibility
 
-OpenMicro accepts input from DualSense, DualShock 4, and wired Xbox gamepads, with a best-effort fallback for generic HID layouts. DualSense is the recommended controller because it also supports lightbar and player-LED feedback; other controllers are input-only.
+OpenMicro accepts input from DualSense, DualShock 4 (including third-party pads in DS4 mode, such as the GameSir Cyclone 2), GameSir-G7 Pro, and wired Xbox gamepads, with a best-effort fallback for generic HID layouts. DualSense is the recommended controller because it also supports lightbar and player-LED feedback; other controllers are input-only.
 
 ## Community-tested controllers
 
