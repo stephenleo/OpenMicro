@@ -222,7 +222,9 @@ if (!isHost) {
 
   /** Terminal writes go to the focused session's instance, else our own pty. */
   function writeToFocused(bytes: string): void {
-    if (herdrForeignFocus) return // typing into an invisible pane is worse than a no-op
+    // The foreign-pane guard protects terminal panes; a GUI harness targets
+    // the app itself, so pane focus must not gate its input.
+    if (herdrForeignFocus && usesPty) return // typing into an invisible pane is worse than a no-op
     const instanceId = focusSessionId ? server.instanceForSession(focusSessionId) : null
     if (!instanceId || !server.sendKeysToInstance(instanceId, bytes)) agent.write(bytes)
   }
@@ -424,7 +426,7 @@ if (!isHost) {
 
   /** Before a push_to_talk press: toggle dictation off wherever it was left on. */
   function retargetVoice(): void {
-    if (herdrForeignFocus) return // press is dropped by writeToFocused anyway
+    if (herdrForeignFocus && usesPty) return // press is dropped by writeToFocused anyway
     const key = focusKey()
     if (voiceSessionKey !== null && voiceSessionKey !== key) {
       stopVoice() // backstop — voiceFollowFocus should already have closed it
