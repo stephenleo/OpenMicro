@@ -312,8 +312,11 @@ if (!isHost) {
   let lastAttentionId: string | null = null
   server.on('aggregate', (agg: Aggregate) => {
     const next = nextFocus(focusSessionId, lastAttentionId, agg)
-    focusSessionId = next.focus
     lastAttentionId = next.lastAttentionId
+    // While herdr governs focus (space selected or foreign pane focused),
+    // attention must not steal it — voice would silently reroute to a pane
+    // the user isn't looking at, fighting the mouse-click focus sync.
+    if (herdrWorkspaceId === null && !herdrForeignFocus) focusSessionId = next.focus
     scheduleFeedback()
   })
 

@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.1.14] - 2026-07-17
+
+### Fixed
+
+- Attention events (a session entering waiting/error state) no longer steal voice/keys focus while herdr governs it: the steal silently rerouted input back to a pane the user wasn't looking at, fighting the mouse-click focus sync and making voice land in two panes. Attention-based focus pull still works in local mode
+
 ## [0.1.13] - 2026-07-17
 
 ### Fixed
