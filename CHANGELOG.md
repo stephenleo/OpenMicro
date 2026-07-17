@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.1.16] - 2026-07-17
+
+### Fixed
+
+- Voice dictation is now restricted to the focused pane: it stops in the old pane the moment focus moves (controller cycle, herdr mouse click, space change), instead of only when the next voice press happened to fire. Previously async herdr focus changes could leave dictation running in a pane the user had left, transcribing into two panes at once
+- Attention events no longer pull focus while dictation is live, which would have cut voice off mid-sentence
+
 ## [0.1.15] - 2026-07-17
 
 ### Fixed

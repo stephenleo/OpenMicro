@@ -291,6 +291,10 @@ if (!isHost) {
   }
 
   function scheduleFeedback(): void {
+    // Every focus change routes through here (it must, to move the LEDs) —
+    // which is also the moment dictation must stop in the pane the user left,
+    // else it keeps transcribing there alongside the newly focused pane.
+    voiceFollowFocus()
     if (feedbackTimer) return
     feedbackTimer = setTimeout(() => {
       feedbackTimer = null
@@ -325,21 +329,34 @@ if (!isHost) {
   // itself (keyboard Space) goes unseen here; next controller press resyncs.
   let voiceSessionKey: string | null = null
 
+  /** Toggle dictation off in whichever pane still holds it open. */
+  function stopVoice(): void {
+    if (voiceSessionKey === null) return
+    const off = harness.resolveAction({ type: 'push_to_talk' }, { thinkingLevel: 0 })
+    if (off) {
+      if (voiceSessionKey === SELF_SESSION_KEY) {
+        agent.write(off.bytes)
+      } else {
+        const instanceId = server.instanceForSession(voiceSessionKey)
+        if (instanceId) server.sendKeysToInstance(instanceId, off.bytes)
+      }
+    }
+    voiceSessionKey = null
+  }
+
+  /** Voice is live in at most one pane: the focused one. Focus left it → stop. */
+  function voiceFollowFocus(): void {
+    if (voiceSessionKey === null) return
+    if (herdrForeignFocus || voiceSessionKey !== focusKey()) stopVoice()
+  }
+
   /** Before a push_to_talk press: toggle dictation off wherever it was left on. */
   function retargetVoice(): void {
     if (herdrForeignFocus) return // press is dropped by writeToFocused anyway
     const key = focusKey()
     if (voiceSessionKey !== null && voiceSessionKey !== key) {
-      const off = harness.resolveAction({ type: 'push_to_talk' }, { thinkingLevel: 0 })
-      if (off) {
-        if (voiceSessionKey === SELF_SESSION_KEY) {
-          agent.write(off.bytes)
-        } else {
-          const instanceId = server.instanceForSession(voiceSessionKey)
-          if (instanceId) server.sendKeysToInstance(instanceId, off.bytes)
-        }
-      }
-      voiceSessionKey = key // old pane closed, this press opens it here
+      stopVoice() // backstop — voiceFollowFocus should already have closed it
+      voiceSessionKey = key // this press opens it here
       return
     }
     voiceSessionKey = voiceSessionKey === key ? null : key // same-pane toggle
@@ -352,7 +369,10 @@ if (!isHost) {
     // While herdr governs focus (space selected or foreign pane focused),
     // attention must not steal it — voice would silently reroute to a pane
     // the user isn't looking at, fighting the mouse-click focus sync.
-    if (herdrWorkspaceId === null && !herdrForeignFocus) focusSessionId = next.focus
+    // Same while dictation is live: stealing focus would cut voice off
+    // mid-sentence (voiceFollowFocus stops it the moment focus leaves).
+    if (herdrWorkspaceId === null && !herdrForeignFocus && voiceSessionKey === null)
+      focusSessionId = next.focus
     scheduleFeedback()
   })
 
