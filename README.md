@@ -34,6 +34,8 @@ Controller support depends on the exact device and connection. Check the [contro
 | d-pad                                           | Navigate TUI menus; repeats while held                       |
 | left stick flick up / down / left / right       | Review PR / debug / refactor / write tests                   |
 | right stick rotate clockwise / counterclockwise | Increase / decrease thinking depth                           |
+| R1                                              | Cycle modes (Shift+Tab)                                      |
+| R2                                              | Clear the input line (Ctrl+U)                                |
 | touchpad click                                  | Focus the next session by default, where supported           |
 | L2                                              | Cycle herdr spaces; touchpad then cycles agents in the space |
 

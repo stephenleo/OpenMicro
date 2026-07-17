@@ -145,6 +145,8 @@ export const DEFAULT_CONFIG: OpenMicroConfig = {
         dpad_down: { type: 'keys', bytes: '\x1b[B' },
         dpad_right: { type: 'keys', bytes: '\x1b[C' },
         dpad_left: { type: 'keys', bytes: '\x1b[D' },
+        r1: { type: 'keys', bytes: '\x1b[Z' }, // Shift+Tab — cycle permission/plan modes
+        r2: { type: 'keys', bytes: '\x15' }, // Ctrl+U — clear the input line
         lstick_up: { type: 'workflow', presetId: 'review-pr' },
         lstick_down: { type: 'workflow', presetId: 'debug' },
         lstick_left: { type: 'workflow', presetId: 'refactor' },

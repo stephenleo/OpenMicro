@@ -10,6 +10,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - L2 cycles herdr workspaces ("spaces"); while a space is selected, touchpad click cycles that space's agents via `herdr agent focus` instead of local sessions. No-op when herdr is absent
 - First-class herdr support: wrapped agent sessions running inside a herdr-managed pane report their state (working/blocked/idle) to herdr via `herdr pane report-agent`, and release the pane claim on session end. No-op outside herdr or when the `herdr` CLI is absent
+- Default Layer 1 bindings: R1 cycles modes (Shift+Tab, `\x1b[Z`) and R2 clears the input line (Ctrl+U, `\x15`)
+
+### Changed
+
+- Refreshed the README banner image
 
 ### Fixed
 

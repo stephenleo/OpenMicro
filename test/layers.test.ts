@@ -29,6 +29,11 @@ describe('loadConfig / saveConfig', () => {
     expect(JSON.parse(fs.readFileSync(configPath, 'utf8'))).toEqual(DEFAULT_CONFIG)
   })
 
+  it('ships R1 mode-cycle and R2 clear-input defaults on Layer 1', () => {
+    expect(DEFAULT_CONFIG.layers[0].bindings.r1).toEqual({ type: 'keys', bytes: '\x1b[Z' })
+    expect(DEFAULT_CONFIG.layers[0].bindings.r2).toEqual({ type: 'keys', bytes: '\x15' })
+  })
+
   it('defaults to ~/.openmicro/config.json, respecting a HOME override', () => {
     process.env.HOME = dir
     const config = loadConfig()
