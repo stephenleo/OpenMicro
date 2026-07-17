@@ -12,126 +12,151 @@
   },
   "results": {
     "south": {
-      "status": "capture",
+      "status": "pass",
       "capture": {
         "idle": "07808080800f0000000000",
         "pressed": "07808080800f0100000000"
       }
     },
     "east": {
-      "status": "capture",
+      "status": "pass",
       "capture": {
-        "idle": "07808080800f0000000000",
-        "pressed": "07808080800f0200000000"
+        "pressed": "07808080800f0200000000",
+        "idle": "07808080800f0100000000"
       }
     },
     "west": {
-      "status": "capture",
+      "status": "pass",
       "capture": {
-        "idle": "07808080800f0000000000",
-        "pressed": "07808080800f0800000000"
+        "pressed": "07808080800f0800000000",
+        "idle": "07808080800f0200000000"
       }
     },
     "north": {
-      "status": "capture",
+      "status": "pass",
       "capture": {
-        "idle": "07808080800f0000000000",
-        "pressed": "07808080800f1000000000"
+        "pressed": "07808080800f1000000000",
+        "idle": "07808080800f0800000000"
       }
     },
     "dpad_up": {
-      "status": "capture",
+      "status": "pass",
       "capture": {
-        "idle": "07808080800f0000000000",
-        "pressed": "0780808080000000000000"
+        "pressed": "0780808080000000000000",
+        "idle": "07808080800f1000000000"
       }
     },
     "dpad_down": {
-      "status": "capture",
+      "status": "pass",
       "capture": {
-        "idle": "07808080800f0000000000",
-        "pressed": "0780808080040000000000"
+        "pressed": "0780808080040000000000",
+        "idle": "0780808080000000000000"
       }
     },
     "dpad_left": {
-      "status": "capture",
+      "status": "pass",
       "capture": {
-        "idle": "0780808080040000000000",
-        "pressed": "0780808080060000000000"
+        "pressed": "0780808080060000000000",
+        "idle": "0780808080040000000000"
       }
     },
     "dpad_right": {
-      "status": "capture",
+      "status": "pass",
       "capture": {
-        "idle": "07808080800f0000000000",
-        "pressed": "0780808080020000000000"
+        "pressed": "0780808080020000000000",
+        "idle": "0780808080060000000000"
       }
     },
     "l1": {
-      "status": "capture",
+      "status": "pass",
       "capture": {
-        "idle": "07808080800f0000000000",
-        "pressed": "07808080800f4000000000"
+        "pressed": "07808080800f4000000000",
+        "idle": "0780808080020000000000"
       }
     },
     "r1": {
-      "status": "capture",
+      "status": "pass",
       "capture": {
-        "idle": "07808080800f0000000000",
-        "pressed": "07808080800f8000000000"
+        "pressed": "07808080800f8000000000",
+        "idle": "07808080800f4000000000"
       }
     },
     "l2": {
-      "status": "capture",
+      "status": "pass",
       "capture": {
-        "idle": "07808080800f0000000000",
-        "pressed": "07808080800f000100ff00"
+        "pressed": "07808080800f000100ff00",
+        "idle": "07808080800f8000000000"
       }
     },
     "r2": {
-      "status": "capture",
+      "status": "pass",
       "capture": {
-        "idle": "07808080800f0000000000",
-        "pressed": "07808080800f0002ff0000"
+        "pressed": "07808080800f0002ff0000",
+        "idle": "07808080800f000100ff00"
       }
     },
     "l3": {
-      "status": "capture",
+      "status": "pass",
       "capture": {
-        "idle": "07808080800f0000000000",
-        "pressed": "07808080800f0020000000"
+        "pressed": "07817e80800f0020000000",
+        "idle": "07808080800f0002ff0000"
       }
     },
     "r3": {
-      "status": "capture",
+      "status": "pass",
       "capture": {
-        "idle": "07808080800f0000000000",
-        "pressed": "07808080800f0040000000"
+        "pressed": "07808080800f0040000000",
+        "idle": "07817e80800f0020000000"
       }
     },
     "menu": {
-      "status": "capture",
+      "status": "pass",
       "capture": {
-        "idle": "07808080800f0000000000",
-        "pressed": "07808080800f0008000000"
+        "pressed": "07808080800f0008000000",
+        "idle": "07808080800f0040000000"
       }
     },
     "view": {
-      "status": "capture",
+      "status": "pass",
       "capture": {
-        "idle": "07808080800f0000000000",
-        "pressed": "07808080800f0004000000"
+        "pressed": "07808080800f0004000000",
+        "idle": "07808080800f0008000000"
       }
     },
     "touchpad": {
-      "status": "capture",
+      "status": "pass",
       "capture": {
-        "idle": "020000",
-        "pressed": "028000"
+        "pressed": "028000",
+        "idle": "07808080800f0004000000"
       }
     }
   },
-  "axes": {},
+  "axes": {
+    "left_x": {
+      "min": -1,
+      "max": 0.9921875
+    },
+    "left_y": {
+      "min": -1,
+      "max": 0.9921875
+    },
+    "right_x": {
+      "min": -1,
+      "max": 0.9921875
+    },
+    "right_y": {
+      "min": -1,
+      "max": 0.9921875
+    },
+    "l2": {
+      "min": 0,
+      "max": 1
+    },
+    "r2": {
+      "min": 0,
+      "max": 1
+    }
+  },
   "output": "unsupported",
-  "timestamp": "2026-07-17T09:08:21.602Z"
+  "timestamp": "2026-07-17T09:24:50.594Z"
 }
