@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.1.12] - 2026-07-17
+
+### Fixed
+
+- Voice/keys input now retargets when switching herdr spaces: cycling to a new space left input routing (`focusSessionId`) on the previously-focused agent in the old space, so voice spilled across spaces. Entering a space now runs the same agent retargeting as touchpad cycling, and stale focus is cleared when the space is empty or the focused pane hosts no openmicro session
+
 ## [0.1.11] - 2026-07-17
 
 ### Fixed
