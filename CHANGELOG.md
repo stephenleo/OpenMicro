@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Unreleased]
+
+### Fixed
+
+- Herdr agent visibility (root cause, confirmed against herdr source): herdr's own claude integration hook (`~/.claude/hooks/herdr-agent-state.sh`, gated on `HERDR_ENV=1`) also runs inside the wrapped agent and claims the pane's session as `herdr:claude`. Once a pane's session has a different owner, herdr silently drops every `pane report-agent` from openmicro regardless of `--seq` — takeover requires herdr to natively detect the reporting agent in the pane's foreground, which it never can for openmicro. The wrapper now removes `HERDR_ENV` from the wrapped agent's environment so herdr's hooks no-op inside it and openmicro stays the pane's sole reporter (`HERDR_PANE_ID` is still passed through for openmicro's own hooks). Panes whose session was already claimed by a previous direct-claude run stay stuck until closed — open a fresh pane
+
 ## [0.1.9] - 2026-07-17
 
 ### Fixed

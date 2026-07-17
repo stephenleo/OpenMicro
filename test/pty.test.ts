@@ -70,6 +70,32 @@ describe('spawnAgentProcess', () => {
     expect(call!.env.PATH).toBe(process.env.PATH)
   })
 
+  it('hides HERDR_ENV from the agent so herdr hooks inside it cannot claim the pane', () => {
+    const previous = { HERDR_ENV: process.env.HERDR_ENV, HERDR_PANE_ID: process.env.HERDR_PANE_ID }
+    process.env.HERDR_ENV = '1'
+    process.env.HERDR_PANE_ID = 'w1:p1'
+    let env: Record<string, string> | undefined
+    const spawn = ((
+      _command: string,
+      _args: string[],
+      options: { env: Record<string, string> },
+    ) => {
+      env = options.env
+      return {}
+    }) as Parameters<typeof spawnAgentProcess>[0]
+
+    try {
+      spawnAgentProcess(spawn, 'claude', [], 'wrapper-123')
+      expect(env!.HERDR_ENV).toBeUndefined()
+      expect(env!.HERDR_PANE_ID).toBe('w1:p1')
+    } finally {
+      for (const [key, value] of Object.entries(previous)) {
+        if (value === undefined) delete process.env[key]
+        else process.env[key] = value
+      }
+    }
+  })
+
   it('leaves the inherited environment unchanged when no wrapper id is requested', () => {
     const previous = process.env.OPENMICRO_INSTANCE_ID
     process.env.OPENMICRO_INSTANCE_ID = 'existing-value'
