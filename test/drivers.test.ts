@@ -146,3 +146,14 @@ describe('Deduper', () => {
     expect(d.filter(press)).toEqual(press)
   })
 })
+
+describe('RawHidDriver', () => {
+  it('emits disconnected when the device cannot be opened', async () => {
+    const { RawHidDriver } = await import('../src/controller/raw-hid-driver.js')
+    const driver = new RawHidDriver('generic-hid', 'not-a-real-path', () => [])
+    const events: ControllerEvent[] = []
+    driver.on('data', (e: ControllerEvent) => events.push(e))
+    driver.start()
+    expect(events).toEqual([{ kind: 'disconnected' }])
+  })
+})

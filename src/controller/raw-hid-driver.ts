@@ -46,6 +46,9 @@ export class RawHidDriver extends EventEmitter implements ControllerHAL {
       })
     } catch (err) {
       logger.error(`${this.controllerType} driver start failed`, err)
+      // Surface the failure so HidManager resumes polling and doctor's
+      // connect wait fails fast instead of walking a dead checklist.
+      this.emit('data', { kind: 'disconnected' } satisfies ControllerEvent)
     }
   }
 

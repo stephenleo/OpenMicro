@@ -144,10 +144,10 @@ function ask(rl: Readline, question: string): Promise<string> {
 function waitConnected(bus: EventEmitter, ms: number): Promise<boolean> {
   return new Promise((resolve) => {
     const handler = (e: ControllerEvent): void => {
-      if (e.kind !== 'connected') return
+      if (e.kind !== 'connected' && e.kind !== 'disconnected') return
       clearTimeout(timer)
       bus.off('data', handler)
-      resolve(true)
+      resolve(e.kind === 'connected')
     }
     const timer = setTimeout(() => {
       bus.off('data', handler)
@@ -384,7 +384,12 @@ export async function runDoctor(): Promise<void> {
 
     const connected = waitConnected(bus, CONNECT_TIMEOUT_MS)
     driver.start()
-    await connected
+    if (!(await connected)) {
+      console.error(
+        'Controller detected but could not be opened. Close any running openmicro sessions (they hold the device) and rerun. Details: ~/.openmicro/openmicro.log',
+      )
+      return
+    }
 
     const device = findDevice(driver.controllerType)
     const dName = driverName(driver.controllerType)
