@@ -166,8 +166,14 @@ if (!isHost) {
     return null
   }
 
+  // True while herdr focus sits on a pane hosting no openmicro session (a
+  // plain terminal, a foreign agent, an empty space). Input is dropped rather
+  // than falling through to some pane the user isn't looking at.
+  let herdrForeignFocus = false
+
   /** Terminal writes go to the focused session's instance, else our own pty. */
   function writeToFocused(bytes: string): void {
+    if (herdrForeignFocus) return // typing into an invisible pane is worse than a no-op
     const instanceId = focusSessionId ? server.instanceForSession(focusSessionId) : null
     if (!instanceId || !server.sendKeysToInstance(instanceId, bytes)) agent.write(bytes)
   }
@@ -183,6 +189,8 @@ if (!isHost) {
       // Entering a space must also retarget voice/keys, else writeToFocused
       // keeps sending to the previously-focused session in another space.
       await cycleHerdrAgent()
+    } else {
+      herdrForeignFocus = false // back to local mode: explicit pick, unblock input
     }
   }
 
@@ -192,6 +200,7 @@ if (!isHost) {
     if (agents.length === 0) {
       // Empty space: keeping the old focus would spill voice into another space.
       focusSessionId = null
+      herdrForeignFocus = true
       scheduleFeedback()
       return
     }
@@ -203,6 +212,7 @@ if (!isHost) {
     // session hosted in that pane. No session in that pane (foreign agent) →
     // clear focus rather than keep spilling into a stale session elsewhere.
     focusSessionId = sessionForPane(next.pane_id)
+    herdrForeignFocus = focusSessionId === null
     scheduleFeedback()
   }
 
@@ -215,11 +225,21 @@ if (!isHost) {
   async function syncHerdrFocus(): Promise<void> {
     if (!herdrPaneId && server.sessionPanes.size === 0) return // no herdr in play
     const focused = (await listAgents()).find((a) => a.focused)
-    if (!focused || focused.pane_id === lastHerdrFocusPane) return
-    lastHerdrFocusPane = focused.pane_id
+    const pane = focused?.pane_id ?? null // null = focused pane hosts no agent
+    if (pane === lastHerdrFocusPane) return // edge-triggered: only act on change
+    lastHerdrFocusPane = pane
+    if (!focused) {
+      // A plain (non-agent) pane took focus: block input instead of routing
+      // voice/keys into a pane the user isn't looking at.
+      focusSessionId = null
+      herdrForeignFocus = true
+      scheduleFeedback()
+      return
+    }
     herdrWorkspaceId = focused.workspace_id
     herdrAgentTarget = focused.terminal_id
     focusSessionId = sessionForPane(focused.pane_id)
+    herdrForeignFocus = focusSessionId === null
     scheduleFeedback()
   }
 
@@ -235,6 +255,7 @@ if (!isHost) {
     }
     const sessions = server.tracker.list()
     if (sessions.length === 0) return
+    herdrForeignFocus = false // explicit local pick overrides the herdr block
     if (index < 0) {
       const current = sessions.findIndex((s) => s.id === focusSessionId)
       const next = sessions[(current + 1) % sessions.length]
