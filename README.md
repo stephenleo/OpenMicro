@@ -34,6 +34,8 @@ Controller support depends on the exact device and connection. Check the [contro
 | d-pad                                           | Navigate TUI menus; repeats while held             |
 | left stick flick up / down / left / right       | Review PR / debug / refactor / write tests         |
 | right stick rotate clockwise / counterclockwise | Increase / decrease thinking depth                 |
+| R1                                              | Cycle modes (Shift+Tab)                            |
+| R2                                              | Clear the input line (Ctrl+U)                      |
 | touchpad click                                  | Focus the next session by default, where supported |
 
 Stick flicks fire after returning to center; each quarter-turn steps thinking depth once. Hold L1 with south, east, west, north, d-pad up, or d-pad down to select one of six layers. The first layer ships with these defaults; the other five start empty. Other controls are unbound by default and remappable.
