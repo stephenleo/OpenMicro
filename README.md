@@ -121,17 +121,21 @@ OpenMicro treats [herdr](https://github.com/stephenleo/herdr) as a first-class e
 - **Agent cycling.** While a space is selected, the touchpad cycles focus across that space's agents instead of local sessions.
 - **Focus follows herdr.** Voice and keystrokes retarget to the agent focused in herdr — switching spaces or agents never spills input into a session in another space.
 
+## Controller compatibility
+
+See [CONTROLLERS.md](CONTROLLERS.md) for the full list of community-tested controllers, connection-specific notes, and per-device status.
+
 ## Test or contribute a controller
 
 ```sh
 openmicro doctor
 ```
 
-The diagnostic checks controller input and, on DualSense, lightbar/player-LED output. It writes a `<vid>-<pid>-<transport>.json` report that can be added unchanged to `test/fixtures/controllers/`; CI then replays the captured inputs as a regression test. See [CONTROLLERS.md](CONTROLLERS.md) for supported devices, connection-specific notes, and contribution steps.
+The diagnostic checks controller input and, on DualSense, lightbar/player-LED output. It writes a `<vid>-<pid>-<transport>.json` report that can be added unchanged to `test/fixtures/controllers/`; CI then replays the captured inputs as a regression test. See [CONTROLLERS.md](CONTROLLERS.md) for contribution steps.
 
 ## Hardware notes
 
-- DualSense is the only controller with lightbar and player-LED output. DS4 and Xbox controllers are input-only; generic HID input is best-effort because report layouts vary.
+- DualSense is the only controller with lightbar and player-LED output. DS4, Xbox, and GameSir controllers are input-only; generic HID input is best-effort because report layouts vary.
 - DualSense has five player LEDs, so feedback represents at most five active session slots.
 - Xbox parsing currently supports its wired USB report layout, not Bluetooth.
 
