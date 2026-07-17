@@ -50,6 +50,7 @@ Voice and thinking-depth support varies by harness; see [OpenMicro feature parit
 - Switch among active sessions from one controller.
 - See focused-session state on DualSense.
 - Remap six layers for project-specific workflows.
+- First-class [herdr](#herdr-integration) support: sessions appear in the herdr workspace overview, and the controller drives herdr spaces and agents.
 
 ## OpenMicro feature parity
 
@@ -111,7 +112,14 @@ The first OpenMicro process owns the controller and becomes the host. Later proc
 
 On DualSense, the lightbar follows the focused session: blue while executing, amber while waiting, green when stopped, red on a detected error, and dim white while idle. The five player LEDs show occupied session slots.
 
-When a wrapped session runs inside a herdr-managed pane, OpenMicro also reports its state (working/blocked/idle) to herdr, so sessions show up in the herdr workspace overview. This is automatic and a no-op outside herdr. L2 cycles through herdr workspaces (and back to local mode); while a workspace is selected, the touchpad cycles focus across that workspace's agents instead of local sessions.
+## Herdr integration
+
+OpenMicro treats [herdr](https://github.com/stephenleo/herdr) as a first-class environment. Everything below is automatic and a no-op outside herdr or when the `herdr` CLI is absent.
+
+- **State reporting.** A wrapped session running inside a herdr-managed pane reports its state (working/blocked/idle) to herdr, so it shows up in the herdr agents panel. OpenMicro claims the pane at startup and releases it on exit.
+- **Space switching.** L2 cycles through herdr workspaces ("spaces") and back to local mode.
+- **Agent cycling.** While a space is selected, the touchpad cycles focus across that space's agents instead of local sessions.
+- **Focus follows herdr.** Voice and keystrokes retarget to the agent focused in herdr — switching spaces or agents never spills input into a session in another space.
 
 ## Test or contribute a controller
 
