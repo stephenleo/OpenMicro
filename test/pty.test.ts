@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
-import { fixSpawnHelperPermissions, spawnAgentProcess } from '../src/pty.js'
+import { fixSpawnHelperPermissions, resolveCommand, spawnAgentProcess } from '../src/pty.js'
 
 const EXEC_BITS = 0o111
 
@@ -49,6 +49,55 @@ describe('fixSpawnHelperPermissions', () => {
 
   it('is a no-op when the prebuilds dir is missing', () => {
     expect(() => fixSpawnHelperPermissions('/nonexistent/prebuilds')).not.toThrow()
+  })
+})
+
+describe('resolveCommand', () => {
+  // Model Windows' case-insensitive filesystem so PATHEXT casing is irrelevant.
+  function fakeFs(...files: string[]): (candidate: string) => boolean {
+    const present = new Set(files.map((f) => f.toLowerCase()))
+    return (candidate) => present.has(candidate.toLowerCase())
+  }
+
+  it('returns the command unchanged on POSIX platforms', () => {
+    const env = { PATH: '/usr/bin', PATHEXT: '.EXE' }
+    expect(resolveCommand('claude', 'linux', env, () => true)).toBe('claude')
+    expect(resolveCommand('claude', 'darwin', env, () => true)).toBe('claude')
+  })
+
+  it('resolves a bare command to its absolute .exe via PATH + PATHEXT on Windows', () => {
+    const env = { PATH: 'C:\\bin;C:\\Users\\me\\.local\\bin', PATHEXT: '.COM;.EXE;.CMD' }
+    const resolved = resolveCommand(
+      'claude',
+      'win32',
+      env,
+      fakeFs('C:\\Users\\me\\.local\\bin\\claude.exe'),
+    )
+    expect(resolved.toLowerCase()).toBe('c:\\users\\me\\.local\\bin\\claude.exe')
+  })
+
+  it('honours PATHEXT precedence (.exe before .cmd)', () => {
+    const env = { PATH: 'C:\\bin', PATHEXT: '.COM;.EXE;.CMD' }
+    const resolved = resolveCommand(
+      'tool',
+      'win32',
+      env,
+      fakeFs('C:\\bin\\tool.cmd', 'C:\\bin\\tool.exe'),
+    )
+    expect(resolved.toLowerCase()).toBe('c:\\bin\\tool.exe')
+  })
+
+  it('leaves an already path-qualified command untouched on Windows', () => {
+    expect(resolveCommand('C:\\bin\\claude.exe', 'win32', {}, () => true)).toBe(
+      'C:\\bin\\claude.exe',
+    )
+    expect(resolveCommand('.\\claude.exe', 'win32', {}, () => true)).toBe('.\\claude.exe')
+    expect(resolveCommand('C:/bin/claude.exe', 'win32', {}, () => true)).toBe('C:/bin/claude.exe')
+  })
+
+  it('falls back to the bare command when nothing is found on PATH', () => {
+    const env = { PATH: 'C:\\bin', PATHEXT: '.EXE' }
+    expect(resolveCommand('claude', 'win32', env, () => false)).toBe('claude')
   })
 })
 

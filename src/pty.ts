@@ -33,6 +33,41 @@ export function fixSpawnHelperPermissions(prebuildsDir?: string): void {
 
 type PtySpawner = typeof pty.spawn
 
+// node-pty's Windows ConPTY backend resolves the executable literally and does
+// not append PATHEXT (e.g. `.exe`), so a bare command like `claude` throws
+// "File not found" even when `claude.exe` is on PATH. Resolve the command to an
+// absolute path ourselves on Windows. No-op on POSIX and when the command is
+// already path-qualified.
+export function resolveCommand(
+  command: string,
+  platform: NodeJS.Platform = process.platform,
+  env: NodeJS.ProcessEnv = process.env,
+  isFile: (candidate: string) => boolean = defaultIsFile,
+): string {
+  if (platform !== 'win32') return command
+  const win = path.win32
+  if (command.includes('/') || command.includes('\\') || win.isAbsolute(command)) return command
+  const extensions = win.extname(command)
+    ? ['']
+    : (env.PATHEXT ?? '.COM;.EXE;.BAT;.CMD').split(';').filter(Boolean)
+  const directories = (env.PATH ?? '').split(';').filter(Boolean)
+  for (const directory of directories) {
+    for (const extension of extensions) {
+      const candidate = win.join(directory, command + extension)
+      if (isFile(candidate)) return candidate
+    }
+  }
+  return command // not found on PATH; let node-pty surface the original error
+}
+
+function defaultIsFile(candidate: string): boolean {
+  try {
+    return fs.statSync(candidate).isFile()
+  } catch {
+    return false
+  }
+}
+
 export function spawnAgentProcess(
   spawnPty: PtySpawner,
   command: string,
@@ -49,7 +84,7 @@ export function spawnAgentProcess(
   // pane. HERDR_PANE_ID stays: openmicro's hook curls echo it back to us.
   delete env.HERDR_ENV
   if (wrapperId) env.OPENMICRO_INSTANCE_ID = wrapperId
-  return spawnPty(command, args, {
+  return spawnPty(resolveCommand(command), args, {
     name: process.env.TERM ?? 'xterm-256color',
     cols: process.stdout.columns,
     rows: process.stdout.rows,
