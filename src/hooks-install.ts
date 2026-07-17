@@ -83,8 +83,13 @@ const COMMAND_MARKER = `127.0.0.1:${HOST_PORT}${new URL(HOOK_URL).pathname}`
 // drops the header, so the host ignores it (see server.ts handleHook).
 const OM_HEADER = 'X-Openmicro-Instance-Id'
 
+// Herdr pane header: herdr injects HERDR_PANE_ID into panes it manages, so a
+// wrapped agent's hooks self-report their pane. Outside herdr the var is empty
+// and curl drops the empty header, so the host never sees it.
+const HERDR_HEADER = 'X-Herdr-Pane-Id'
+
 function hookCommand(event: string): string {
-  return `curl -s --max-time 1 -X POST ${HOOK_URL}${event} -H 'Content-Type: application/json' -H "${OM_HEADER}: $OPENMICRO_INSTANCE_ID" -d @- >/dev/null 2>&1 || true`
+  return `curl -s --max-time 1 -X POST ${HOOK_URL}${event} -H 'Content-Type: application/json' -H "${OM_HEADER}: $OPENMICRO_INSTANCE_ID" -H "${HERDR_HEADER}: $HERDR_PANE_ID" -d @- >/dev/null 2>&1 || true`
 }
 
 /** Event name → matcher (undefined = all). PreToolUse only fires for AskUserQuestion. */
@@ -152,7 +157,7 @@ export function installClaudeHooks(settingsPath?: string): HookWriteResult {
 const CODEX_HOOK_EVENTS = ['UserPromptSubmit', 'PermissionRequest', 'PostToolUse', 'Stop'] as const
 
 function codexHookCommand(event: string): string {
-  return `curl -s --max-time 1 -X POST ${HOOK_URL}${event} -H 'Content-Type: application/json' -H "${OM_HEADER}: $OPENMICRO_INSTANCE_ID" -d @- >/dev/null 2>&1 || true; printf '{}'`
+  return `curl -s --max-time 1 -X POST ${HOOK_URL}${event} -H 'Content-Type: application/json' -H "${OM_HEADER}: $OPENMICRO_INSTANCE_ID" -H "${HERDR_HEADER}: $HERDR_PANE_ID" -d @- >/dev/null 2>&1 || true; printf '{}'`
 }
 
 function isCodexOurs(group: unknown): boolean {

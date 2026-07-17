@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- First-class herdr support: wrapped agent sessions running inside a herdr-managed pane report their state (working/blocked/idle) to herdr via `herdr pane report-agent`, and release the pane claim on session end. No-op outside herdr or when the `herdr` CLI is absent
 - Default Layer 1 bindings: R1 cycles modes (Shift+Tab, `\x1b[Z`) and R2 clears the input line (Ctrl+U, `\x15`)
 
 ### Changed

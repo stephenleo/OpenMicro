@@ -8,6 +8,7 @@ import { EventEmitter } from 'node:events'
 import http from 'node:http'
 import { harnessFor } from './harness/index.js'
 import type { Harness } from './harness/types.js'
+import { releaseAgent, reportAgentState } from './herdr.js'
 import { logger } from './logger.js'
 import { HOOK_PATH, HOST_URL } from './ports.js'
 import { SessionTracker } from './state.js'
@@ -17,6 +18,11 @@ import { SessionTracker } from './state.js'
 // env). Header-less hooks come from sessions openmicro never wrapped — cwd is
 // ambiguous when several sessions share a directory, so they are ignored.
 const INSTANCE_HEADER = 'x-openmicro-instance-id'
+
+// Herdr pane id, echoed back by hook commands when the wrapped agent runs
+// inside a herdr-managed pane (HERDR_PANE_ID in its env). Only honored on
+// trusted hooks — same gate as the instance header.
+const HERDR_PANE_HEADER = 'x-herdr-pane-id'
 
 // Node's fetch (undici) kills a response body that stays silent for 300s
 // (default bodyTimeout), which tore down idle client keystroke streams and
@@ -212,16 +218,21 @@ export class HostServer extends EventEmitter {
       trusted = !this.hostWrapperId // filtering off (bare server in tests)
     }
 
+    const paneHeader = req.headers[HERDR_PANE_HEADER]
+    const herdrPaneId = Array.isArray(paneHeader) ? paneHeader[0] : paneHeader
+
     if (trusted) {
       let changed = false
       if (event === 'SessionEnd') {
         // Harnesses classify SessionEnd as null (caller removes) — a dead waiter
         // must not pin the FSM.
         changed = this.tracker.remove(sessionId)
+        if (herdrPaneId) releaseAgent(herdrPaneId)
       } else {
         const state = harness.stateForHookEvent(event, payload)
         if (state !== null) {
           changed = this.tracker.apply(sessionId, state, { focusOnStop: Boolean(wrapperId) })
+          if (herdrPaneId) reportAgentState(herdrPaneId, state, sessionId)
         }
       }
       if (changed) this.emit('aggregate', this.tracker.aggregate())

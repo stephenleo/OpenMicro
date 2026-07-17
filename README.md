@@ -110,6 +110,8 @@ The first OpenMicro process owns the controller and becomes the host. Later proc
 
 On DualSense, the lightbar follows the focused session: blue while executing, amber while waiting, green when stopped, red on a detected error, and dim white while idle. The five player LEDs show occupied session slots.
 
+When a wrapped session runs inside a herdr-managed pane, OpenMicro also reports its state (working/blocked/idle) to herdr, so sessions show up in the herdr workspace overview. This is automatic and a no-op outside herdr.
+
 ## Test or contribute a controller
 
 ```sh

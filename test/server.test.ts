@@ -2,10 +2,13 @@
 // /om-hook/<event> drive the aggregate (classified through the reporting
 // session's harness), and SSE streams forward keystrokes to client instances.
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { harnessFor } from '../src/harness/index.js'
+import { releaseAgent, reportAgentState } from '../src/herdr.js'
 import { HostServer } from '../src/server.js'
 import type { Aggregate } from '../src/state.js'
+
+vi.mock('../src/herdr.js', () => ({ reportAgentState: vi.fn(), releaseAgent: vi.fn() }))
 
 const claude = harnessFor('claude')
 
@@ -18,7 +21,10 @@ beforeEach(async () => {
   base = `http://127.0.0.1:${server.boundPort}`
 })
 
-afterEach(() => server.close())
+afterEach(() => {
+  server.close()
+  vi.clearAllMocks()
+})
 
 async function postHook(event: string, sessionId: string, extra: Record<string, unknown> = {}) {
   await fetch(`${base}/om-hook/${event}`, {
@@ -229,6 +235,41 @@ describe('HostServer', () => {
     expect(server.sessionOwners.has('session-a')).toBe(false)
     expect(server.sessionOwners.get('session-b')).toBe('wrapper-b')
     controllerB.abort()
+  })
+
+  it('mirrors trusted hook state to herdr when the pane header is present', async () => {
+    await fetch(`${base}/om-hook/UserPromptSubmit`, {
+      method: 'POST',
+      headers: { 'X-Herdr-Pane-Id': 'pane-7' },
+      body: JSON.stringify({ session_id: 's1' }),
+    })
+    expect(reportAgentState).toHaveBeenCalledWith('pane-7', 'executing', 's1')
+
+    await fetch(`${base}/om-hook/SessionEnd`, {
+      method: 'POST',
+      headers: { 'X-Herdr-Pane-Id': 'pane-7' },
+      body: JSON.stringify({ session_id: 's1' }),
+    })
+    expect(releaseAgent).toHaveBeenCalledWith('pane-7')
+  })
+
+  it('never reports to herdr without the pane header or from untrusted hooks', async () => {
+    await postHook('UserPromptSubmit', 's1') // trusted but no pane header
+    expect(reportAgentState).not.toHaveBeenCalled()
+
+    // Untrusted (unknown wrapper on a scoped server) must not leak to herdr.
+    const scoped = new HostServer(claude, 'host-wrapper')
+    await scoped.listen(0)
+    try {
+      await fetch(`http://127.0.0.1:${scoped.boundPort}/om-hook/UserPromptSubmit`, {
+        method: 'POST',
+        headers: { 'X-Openmicro-Instance-Id': 'unknown-wrapper', 'X-Herdr-Pane-Id': 'pane-9' },
+        body: JSON.stringify({ session_id: 'foreign' }),
+      })
+      expect(reportAgentState).not.toHaveBeenCalled()
+    } finally {
+      scoped.close()
+    }
   })
 
   it('ignores header-less hook events from sessions openmicro never wrapped', async () => {
