@@ -71,6 +71,8 @@ export interface HerdrAgent {
   terminal_id: string
   /** Herdr pane hosting the agent — matches the X-Herdr-Pane-Id hook header. */
   pane_id: string
+  /** True for the pane currently focused in the herdr UI. */
+  focused?: boolean
 }
 
 /**
