@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Default Layer 1 bindings: R1 cycles modes (Shift+Tab, `\x1b[Z`) and R2 clears the input line (Ctrl+U, `\x15`)
+
+### Changed
+
+- Refreshed the README banner image
+
 ### Fixed
 
 - Manual touchpad session focus is no longer stolen when another session merely finishes a turn; only sessions newly demanding attention (waiting/error) pull controller focus.
