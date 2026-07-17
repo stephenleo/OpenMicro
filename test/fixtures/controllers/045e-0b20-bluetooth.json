@@ -7,6 +7,7 @@
     "vid": "0x045e",
     "pid": "0x0b20",
     "product": "Xbox Wireless Controller",
+    "makeModel": "Microsoft Xbox One S Controller",
     "transport": "bluetooth",
     "driver": "xbox"
   },

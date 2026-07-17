@@ -7,6 +7,7 @@
     "vid": "0x054c",
     "pid": "0x05c4",
     "product": "DUALSHOCK 4 Wireless Controller",
+    "makeModel": "GameSir Cyclone 2 (DS4 mode)",
     "transport": "bluetooth",
     "driver": "ds4"
   },

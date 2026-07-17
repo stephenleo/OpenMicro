@@ -79,6 +79,8 @@ export interface DoctorReport {
     vid: string
     pid: string
     product: string
+    /** Real-world make/model typed by the tester — firmware product strings are often generic or wrong. */
+    makeModel?: string
     transport: string
     driver: string
   }
@@ -146,6 +148,20 @@ function findDevice(type: ControllerType): Device | undefined {
 /** A minimal readline prompt helper: print a question, resolve with the typed line. */
 function ask(rl: Readline, question: string): Promise<string> {
   return new Promise((resolve) => rl.question(question, resolve))
+}
+
+/**
+ * Ask the tester for the pad's real make/model — the firmware product string is
+ * often generic or wrong (a wired Xbox One S says "Controller"; a Cyclone 2 in
+ * DS4 mode claims to be a DUALSHOCK 4). Empty answer omits the field.
+ */
+async function askMakeModel(rl: Readline, product: string): Promise<string | undefined> {
+  const answer = await ask(
+    rl,
+    `\nMake/model of this controller (e.g. "GameSir Cyclone 2 (DS4 mode)") — Enter to keep "${product}": `,
+  )
+  const trimmed = answer.trim()
+  return trimmed === '' ? undefined : trimmed
 }
 
 /** Resolve once the driver emits a `connected` event, or false on timeout. Attach BEFORE start(). */
@@ -332,7 +348,8 @@ function markdownSummary(report: DoctorReport): string {
   const lines: string[] = []
   lines.push('### OpenMicro controller report')
   lines.push('')
-  lines.push(`- Controller: ${c.product} (VID ${c.vid} / PID ${c.pid})`)
+  const shownName = c.makeModel ? `${c.makeModel} — reports as "${c.product}"` : c.product
+  lines.push(`- Controller: ${shownName} (VID ${c.vid} / PID ${c.pid})`)
   lines.push(`- Transport: ${c.transport}`)
   lines.push(`- Driver: ${c.driver}${parserNote}`)
   lines.push(`- openmicro ${report.openmicroVersion} · ${report.platform} · ${report.osVersion}`)
@@ -381,6 +398,7 @@ export async function runDoctor(opts: { capture?: boolean } = {}): Promise<void>
           vid: hex16(candidate.vendorId),
           pid: hex16(candidate.productId),
           product: candidate.product ?? '(unknown)',
+          makeModel: await askMakeModel(rl, candidate.product ?? '(unknown)'),
           transport: transportFor(candidate),
           driver: 'none',
         },
@@ -438,6 +456,7 @@ export async function runDoctor(opts: { capture?: boolean } = {}): Promise<void>
         vid: device ? hex16(device.vendorId) : '?',
         pid: device ? hex16(device.productId) : '?',
         product: device?.product ?? '(unknown)',
+        makeModel: await askMakeModel(rl, device?.product ?? '(unknown)'),
         transport: device ? transportFor(device) : 'unknown',
         driver: dName,
       },

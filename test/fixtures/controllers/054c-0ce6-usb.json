@@ -7,6 +7,7 @@
     "vid": "0x054c",
     "pid": "0x0ce6",
     "product": "DualSense Wireless Controller",
+    "makeModel": "Sony DualSense",
     "transport": "usb",
     "driver": "dualsense"
   },

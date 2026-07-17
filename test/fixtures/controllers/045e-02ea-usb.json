@@ -7,6 +7,7 @@
     "vid": "0x045e",
     "pid": "0x02ea",
     "product": "Controller",
+    "makeModel": "Microsoft Xbox One S Controller",
     "transport": "usb",
     "driver": "xbox"
   },

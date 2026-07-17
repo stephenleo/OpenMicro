@@ -23,7 +23,14 @@ interface ControlResult {
 
 /** The subset of the doctor report the table depends on. */
 export interface FixtureReport {
-  controller: { vid: string; pid: string; product: string; transport: string; driver: string }
+  controller: {
+    vid: string
+    pid: string
+    product: string
+    makeModel?: string
+    transport: string
+    driver: string
+  }
   results: Record<string, ControlResult>
   output: Record<string, string> | 'unsupported'
 }
@@ -67,19 +74,25 @@ function statusBadge(report: FixtureReport): string {
 /** Render the markdown table body (no surrounding markers), sorted by product name. */
 export function renderTable(reports: FixtureReport[]): string {
   const header =
-    '| Controller | VID:PID | Connection | Driver | Buttons passed | Output | Status |\n' +
-    '| --- | --- | --- | --- | --- | --- | --- |'
+    '| Controller | Reports as | VID:PID | Connection | Driver | Buttons passed | Output | Status |\n' +
+    '| --- | --- | --- | --- | --- | --- | --- | --- |'
   if (reports.length === 0) {
-    return header + '\n| _none yet — run `openmicro doctor` and open a PR_ | | | | | | |'
+    return header + '\n| _none yet — run `openmicro doctor` and open a PR_ | | | | | | | |'
   }
-  const rows = [...reports]
-    .sort((a, b) => a.controller.product.localeCompare(b.controller.product))
-    .map((r) => {
+  // Doctor prompts the tester for the real make/model; older fixtures without
+  // the field fall back to the firmware product string.
+  const named = [...reports].map((r) => {
+    const c = r.controller
+    const vidpid = `${c.vid.replace(/^0x/, '')}:${c.pid.replace(/^0x/, '')}`
+    return { r, vidpid, name: c.makeModel ?? c.product }
+  })
+  const rows = named
+    .sort((a, b) => a.name.localeCompare(b.name) || a.vidpid.localeCompare(b.vidpid))
+    .map(({ r, vidpid, name }) => {
       const c = r.controller
-      const vidpid = `${c.vid.replace(/^0x/, '')}:${c.pid.replace(/^0x/, '')}`
       const { passed, total } = buttonTally(r.results)
       const buttons = total === 0 ? '—' : `${passed}/${total}`
-      return `| ${c.product} | ${vidpid} | ${c.transport} | ${c.driver} | ${buttons} | ${outputCell(r.output)} | ${statusBadge(r)} |`
+      return `| ${name} | ${c.product} | ${vidpid} | ${c.transport} | ${c.driver} | ${buttons} | ${outputCell(r.output)} | ${statusBadge(r)} |`
     })
   return [header, ...rows].join('\n')
 }

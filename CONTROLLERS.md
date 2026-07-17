@@ -8,13 +8,13 @@ Every controller below has a committed `openmicro doctor` report. CI replays cap
 
 <!-- controllers:start -->
 
-| Controller                      | VID:PID   | Connection | Driver    | Buttons passed | Output        | Status  |
-| ------------------------------- | --------- | ---------- | --------- | -------------- | ------------- | ------- |
-| Controller                      | 045e:02ea | usb        | xbox      | 17/17          | none          | ✅ full |
-| DualSense Wireless Controller   | 054c:0ce6 | usb        | dualsense | 17/17          | lightbar+LEDs | ✅ full |
-| DUALSHOCK 4 Wireless Controller | 054c:05c4 | bluetooth  | ds4       | 17/17          | none          | ✅ full |
-| GameSir-G7 Pro                  | 3537:1022 | bluetooth  | gamesir   | 17/17          | none          | ✅ full |
-| Xbox Wireless Controller        | 045e:0b20 | bluetooth  | xbox      | 17/17          | none          | ✅ full |
+| Controller                      | Reports as                      | VID:PID   | Connection | Driver    | Buttons passed | Output        | Status  |
+| ------------------------------- | ------------------------------- | --------- | ---------- | --------- | -------------- | ------------- | ------- |
+| GameSir Cyclone 2 (DS4 mode)    | DUALSHOCK 4 Wireless Controller | 054c:05c4 | bluetooth  | ds4       | 17/17          | none          | ✅ full |
+| GameSir G7 Pro                  | GameSir-G7 Pro                  | 3537:1022 | bluetooth  | gamesir   | 17/17          | none          | ✅ full |
+| Microsoft Xbox One S Controller | Controller                      | 045e:02ea | usb        | xbox      | 17/17          | none          | ✅ full |
+| Microsoft Xbox One S Controller | Xbox Wireless Controller        | 045e:0b20 | bluetooth  | xbox      | 17/17          | none          | ✅ full |
+| Sony DualSense                  | DualSense Wireless Controller   | 054c:0ce6 | usb        | dualsense | 17/17          | lightbar+LEDs | ✅ full |
 
 <!-- controllers:end -->
 
@@ -77,6 +77,7 @@ Conventions the new parser must follow (point the agent at an existing driver as
 1. `npm run typecheck && npm run lint && npm run format:check && npm test`
 2. `npm run build`, then re-run `node dist/cli.js doctor` on the real pad until **17/17 controls pass** (skip `touchpad` with `s` only if the pad truly has no home button).
 3. Drop the generated report into `test/fixtures/controllers/` — CI replays every captured press through your parser automatically, no test edits needed.
-4. `npm run gen:controllers` to refresh the table above, and open a PR with the parser + fixture together.
+4. When doctor asks for the make/model, type the pad's real retail name — firmware product strings are often generic or wrong (the wired Xbox One S calls itself "Controller"; a Cyclone 2 in DS4 mode claims to be a DUALSHOCK 4). The table's Controller column comes from this answer.
+5. `npm run gen:controllers` to refresh the table above, and open a PR with the parser + fixture together.
 
 If a control still fails, loop back to step 2 and capture just that control — the failing button's frames tell you what the parser missed.
