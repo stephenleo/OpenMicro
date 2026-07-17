@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.1.15] - 2026-07-17
+
+### Fixed
+
+- Xbox LT/RT presses no longer intermittently fail to register: the synthesized l2/r2 button press required a >50% analog pull, so soft or fast taps produced no press edge. Threshold lowered to 25% (DS4 unaffected — its triggers are hardware digital bits)
+- Rapid LT presses no longer swallow each other: herdr space/agent cycle operations were fire-and-forget and could interleave, computing the same "next" twice. They are now serialized through a queue
+- Starting voice in a second pane no longer leaves the first pane transcribing too: the host now tracks which pane holds dictation open and sends the toggle-off keystroke there before opening voice in the newly focused pane
+
 ## [0.1.14] - 2026-07-17
 
 ### Fixed
