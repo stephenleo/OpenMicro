@@ -8,6 +8,18 @@ import { installCodexHooks } from '../hooks-install.js'
 import { codexHarness } from './codex.js'
 import type { Action, AgentState, Harness } from './types.js'
 
+// Terminal byte sequences with a System Events equivalent — lets the default
+// layer's `keys` bindings (d-pad arrows, Shift+Tab clear/cycle, Ctrl+U) drive
+// the app. Sequences without an entry resolve to null (no GUI meaning).
+const KEY_EQUIVALENTS: Record<string, string> = {
+  '\x1b[A': 'key code 126', // up arrow
+  '\x1b[B': 'key code 125', // down arrow
+  '\x1b[C': 'key code 124', // right arrow
+  '\x1b[D': 'key code 123', // left arrow
+  '\x1b[Z': 'key code 48 using shift down', // Shift+Tab
+  '\x15': 'keystroke "u" using control down', // Ctrl+U — clear the input line
+}
+
 export const codexAppHarness: Harness = {
   kind: 'codex-app',
   usesPty: false,
@@ -51,11 +63,13 @@ export const codexAppHarness: Harness = {
         // follows with accept.
         return { bytes: 'open:codex://new?prompt=' + encodeURIComponent(action.text) }
       case 'reject':
-        return null // documented gap: no cancel shortcut in the app, never faked
+        return { bytes: 'osascript:key code 53' } // Esc — stop generation / dismiss
       case 'thinking_depth':
         return null // documented gap: no reasoning-effort control in the app
-      case 'keys':
-        return null // documented gap: no pty to pass raw bytes through
+      case 'keys': {
+        const equivalent = KEY_EQUIVALENTS[action.bytes]
+        return equivalent ? { bytes: `osascript:${equivalent}` } : null
+      }
       default:
         return null // workflow/focus_session/layer never reach a harness
     }

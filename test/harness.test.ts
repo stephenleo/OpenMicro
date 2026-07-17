@@ -149,10 +149,21 @@ describe('codex-app harness', () => {
     })
   })
 
+  it('maps reject to Escape and known key bytes to System Events equivalents', () => {
+    expect(codexAppHarness.resolveAction({ type: 'reject' }, ctx)).toEqual({
+      bytes: 'osascript:key code 53',
+    })
+    expect(codexAppHarness.resolveAction({ type: 'keys', bytes: '\x1b[A' }, ctx)).toEqual({
+      bytes: 'osascript:key code 126',
+    })
+    expect(codexAppHarness.resolveAction({ type: 'keys', bytes: '\x15' }, ctx)).toEqual({
+      bytes: 'osascript:keystroke "u" using control down',
+    })
+  })
+
   it('returns null for documented gaps and core-only actions', () => {
-    expect(codexAppHarness.resolveAction({ type: 'reject' }, ctx)).toBeNull()
     expect(codexAppHarness.resolveAction({ type: 'thinking_depth', delta: 1 }, ctx)).toBeNull()
-    expect(codexAppHarness.resolveAction({ type: 'keys', bytes: '\x1b[A' }, ctx)).toBeNull()
+    expect(codexAppHarness.resolveAction({ type: 'keys', bytes: '\x07' }, ctx)).toBeNull()
     expect(codexAppHarness.resolveAction({ type: 'workflow', presetId: 'x' }, ctx)).toBeNull()
     expect(codexAppHarness.resolveAction({ type: 'focus_session', index: 0 }, ctx)).toBeNull()
     expect(codexAppHarness.resolveAction({ type: 'layer', index: 1 }, ctx)).toBeNull()
