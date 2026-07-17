@@ -18,8 +18,8 @@ function axis(raw: number): number {
  * Parse a DS4 0x01 input report:
  * bytes 1-4 sticks (0-255, center 128); byte 5 low nibble = d-pad hat
  * (0=N clockwise to 7=NW, >=8 released), high nibble = square/cross/circle/
- * triangle bits; byte 6 = L1 R1 L2 R2 Share Options L3 R3; bytes 8-9 =
- * trigger analogs.
+ * triangle bits; byte 6 = L1 R1 L2 R2 Share Options L3 R3; byte 7 low 2 bits =
+ * PS/home + touchpad click; bytes 8-9 = trigger analogs.
  */
 export function parseDs4Report(data: Buffer): ControllerEvent[] {
   const events: ControllerEvent[] = []
@@ -62,6 +62,12 @@ export function parseDs4Report(data: Buffer): ControllerEvent[] {
   for (const [bit, id] of sysMap) {
     events.push({ kind: 'button', button: id, pressed: (sys & bit) !== 0 })
   }
+
+  // Byte 7 low 2 bits: PS/home (0x01) + touchpad click (0x02). High 6 bits are
+  // a report counter on genuine DS4s, so mask them off. Both map to 'touchpad'
+  // (openmicro's focus-cycle button) — pads in DS4 mode like the Cyclone 2 have
+  // no touchpad, so their home button (0x01) is the only source here.
+  events.push({ kind: 'button', button: 'touchpad', pressed: (data[7]! & 0x03) !== 0 })
 
   events.push({ kind: 'axis', axis: 'l2', value: data[8]! / 255 })
   events.push({ kind: 'axis', axis: 'r2', value: data[9]! / 255 })

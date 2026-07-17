@@ -1,0 +1,158 @@
+{
+  "schemaVersion": 1,
+  "openmicroVersion": "0.2.0",
+  "platform": "darwin",
+  "osVersion": "Darwin Kernel Version 25.5.0: Tue Jun  9 22:28:17 PDT 2026; root:xnu-12377.121.10~1/RELEASE_ARM64_T8142",
+  "controller": {
+    "vid": "0x054c",
+    "pid": "0x05c4",
+    "product": "DUALSHOCK 4 Wireless Controller",
+    "transport": "bluetooth",
+    "driver": "ds4"
+  },
+  "results": {
+    "south": {
+      "status": "pass"
+    },
+    "east": {
+      "status": "pass",
+      "capture": {
+        "pressed": "01808080804f00000000",
+        "idle": "01808080802f00000000"
+      }
+    },
+    "west": {
+      "status": "pass",
+      "capture": {
+        "pressed": "01808080801f00000000",
+        "idle": "01808080804f00000000"
+      }
+    },
+    "north": {
+      "status": "pass",
+      "capture": {
+        "pressed": "01808080808f00000000",
+        "idle": "01808080801f00000000"
+      }
+    },
+    "dpad_up": {
+      "status": "pass",
+      "capture": {
+        "pressed": "01808080800000000000",
+        "idle": "01808080808f00000000"
+      }
+    },
+    "dpad_down": {
+      "status": "pass",
+      "capture": {
+        "pressed": "01808080800400000000",
+        "idle": "01808080800000000000"
+      }
+    },
+    "dpad_left": {
+      "status": "pass",
+      "capture": {
+        "pressed": "01808080800600000000",
+        "idle": "01808080800400000000"
+      }
+    },
+    "dpad_right": {
+      "status": "pass",
+      "capture": {
+        "pressed": "01808080800200000000",
+        "idle": "01808080800600000000"
+      }
+    },
+    "l1": {
+      "status": "pass",
+      "capture": {
+        "pressed": "01808080800f01000000",
+        "idle": "01808080800200000000"
+      }
+    },
+    "r1": {
+      "status": "pass",
+      "capture": {
+        "pressed": "01808080800f02000000",
+        "idle": "01808080800f01000000"
+      }
+    },
+    "l2": {
+      "status": "pass",
+      "capture": {
+        "pressed": "01808080800f0400ff00",
+        "idle": "01808080800f02000000"
+      }
+    },
+    "r2": {
+      "status": "pass",
+      "capture": {
+        "pressed": "01808080800f080000ff",
+        "idle": "01808080800f0400ff00"
+      }
+    },
+    "l3": {
+      "status": "pass",
+      "capture": {
+        "pressed": "01808080800f40000000",
+        "idle": "01808080800f080000ff"
+      }
+    },
+    "r3": {
+      "status": "pass",
+      "capture": {
+        "pressed": "0180807f810f80000000",
+        "idle": "01808080800f40000000"
+      }
+    },
+    "menu": {
+      "status": "pass",
+      "capture": {
+        "pressed": "01808080800f20000000",
+        "idle": "0180807f810f80000000"
+      }
+    },
+    "view": {
+      "status": "pass",
+      "capture": {
+        "pressed": "01808080800f10000000",
+        "idle": "01808080800f20000000"
+      }
+    },
+    "touchpad": {
+      "status": "pass",
+      "capture": {
+        "pressed": "01808080800f00010000",
+        "idle": "01808080800f10000000"
+      }
+    }
+  },
+  "axes": {
+    "left_x": {
+      "min": -1,
+      "max": 0.9921875
+    },
+    "left_y": {
+      "min": -1,
+      "max": 0.9921875
+    },
+    "right_x": {
+      "min": -1,
+      "max": 0.9921875
+    },
+    "right_y": {
+      "min": -1,
+      "max": 0.9921875
+    },
+    "l2": {
+      "min": 0,
+      "max": 1
+    },
+    "r2": {
+      "min": 0,
+      "max": 1
+    }
+  },
+  "output": "unsupported",
+  "timestamp": "2026-07-17T12:59:12.481Z"
+}

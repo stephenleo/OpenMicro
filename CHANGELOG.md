@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.2.1] - 2026-07-17
+
+### Fixed
+
+- DS4-mode home/touchpad button now registers. `parseDs4Report` never read byte 7, where the PS/home button (bit 0) and touchpad click (bit 1) live, so neither produced events. Third-party pads in DS4 mode (e.g. GameSir Cyclone 2) have no touchpad, so their home button — byte 7 bit 0 — had nowhere to land and failed the doctor's `touchpad` check. Byte 7's low two bits now map to `touchpad`, masking the high six bits (a report counter on genuine DS4s, so it can't fake presses). A real DualShock 4's touchpad click works too
+
+### Added
+
+- GameSir Cyclone 2 certified over Bluetooth in DS4 mode (all 17 controls pass). It reports as a DualShock 4 (`054c:05c4`), so the committed fixture also covers genuine DS4s and CI replays its touchpad capture
+
 ## [0.2.0] - 2026-07-17
 
 ### Added

@@ -166,6 +166,15 @@ describe('parseDs4Report', () => {
     expect(axes(events).get('left_y')).toBeCloseTo(0.99, 1)
   })
 
+  it('maps byte 7 PS/home + touchpad click to touchpad, ignoring the counter', () => {
+    // Real Cyclone 2 capture: home button toggles byte 7 bit 0.
+    expect(buttons(parseDs4Report(report('01808080800f00010000'))).get('touchpad')).toBe(true)
+    // Genuine DS4 touchpad click is bit 1.
+    expect(buttons(parseDs4Report(report('01808080800f00020000'))).get('touchpad')).toBe(true)
+    // High bits are a report counter, not a press.
+    expect(buttons(parseDs4Report(report('01808080800f00fc0000'))).get('touchpad')).toBe(false)
+  })
+
   it('ignores non-0x01 and short reports', () => {
     expect(parseDs4Report(report('11808080800f00000000'))).toEqual([])
     expect(parseDs4Report(report('018080'))).toEqual([])
