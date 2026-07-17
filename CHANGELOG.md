@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.1.18] - 2026-07-17
+
+### Fixed
+
+- Voice now actually stops in the host's own pane on focus change. When the host's session was tracked by session id (the normal case once hooks register it), `stopVoice` looked for a client instance that doesn't exist for host-owned sessions and gave up with "voice stop not delivered" — the first-launched session kept transcribing after focus moved away. The stop keystroke now falls back to the host's own pty, mirroring how regular key routing already handled it
+- LT space cycling no longer eats presses at the wrap-around. `cycleHerdrAgent` changed the herdr pane without marking the change as seen, so the focus poll mistook openmicro's own pane switch for a mouse click and re-synced the workspace right after LT stepped past the last space into local mode — undoing the press. Cycling now records its own pane changes, so LT wraps last space → local mode → first space without dead presses
+
 ## [0.1.17] - 2026-07-17
 
 ### Fixed

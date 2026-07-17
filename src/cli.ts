@@ -212,6 +212,10 @@ if (!isHost) {
     const next = agents[(current + 1) % agents.length]!
     herdrAgentTarget = next.terminal_id
     void focusAgent(next.terminal_id)
+    // Mark our own pane change as seen, or the focus poll mistakes it for a
+    // mouse click and re-syncs herdrWorkspaceId right after LT set it — the
+    // press past the last space (→ local mode) got silently undone.
+    lastHerdrFocusPane = next.pane_id
     // Voice/keys must follow the herdr pick: retarget input routing to the
     // session hosted in that pane. No session in that pane (foreign agent) →
     // clear focus rather than keep spilling into a stale session elsewhere.
@@ -350,7 +354,13 @@ if (!isHost) {
     if (voiceSessionKey === null) return
     const off = harness.resolveAction({ type: 'push_to_talk' }, { thinkingLevel: 0 })
     if (off) {
-      if (voiceSessionKey === SELF_SESSION_KEY) {
+      // Host-owned sessions have no client instance (instanceForSession
+      // returns null for them) — the stop keystroke goes to our own pty,
+      // same as writeToFocused's fallback.
+      if (
+        voiceSessionKey === SELF_SESSION_KEY ||
+        server.sessionOwners.get(voiceSessionKey) === wrapperId
+      ) {
         agent.write(off.bytes)
       } else {
         const instanceId = server.instanceForSession(voiceSessionKey)
