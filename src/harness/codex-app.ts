@@ -120,6 +120,12 @@ export function scanDesktopThreads(
     seen.add(meta.id)
     threads.push({ id: meta.id, cwd: meta.cwd, mtime })
   }
+  // Cycle order must be stable across presses: opening a thread bumps its
+  // rollout mtime, so mtime order reshuffles under the cursor and cycling
+  // feels random. Thread ids are UUIDv7 (creation-time-ordered) — sort by id
+  // desc for a fixed newest-first walk. ponytail: the sidebar sorts by last
+  // update, not creation; close enough, and stability beats fidelity here.
+  threads.sort((a, b) => b.id.localeCompare(a.id))
   return threads
 }
 
