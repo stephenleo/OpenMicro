@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.0.1] - 2026-07-18
+
+### Fixed
+
+- **Codex app: push-to-talk now actually starts dictation.** The app's `Ctrl+Shift+D` binding is hold-to-dictate, so the previous synthetic press+release started and stopped it in the same instant. Triangle now holds the chord down on the first press and releases it on the second — mic engages while held, transcript inserts on release.
+- **Codex app: dictation no longer cuts off seconds after starting.** The pane-oriented voice auto-stop paths (terminal focus loss, session focus follow, prompt-submit tracking drop) fired for GUI harnesses too — and the app keystroke itself steals OS focus from the host terminal on every press. All three are now disabled in GUI mode; the controller toggle alone owns voice state.
+
 ## [1.0.0] - 2026-07-17
 
 ### Added
