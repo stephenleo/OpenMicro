@@ -41,6 +41,8 @@ export interface OpenMicroConfig {
   layers: [Layer, Layer, Layer, Layer, Layer, Layer]
   /** presetId -> prompt template text, referenced by `{ type: 'workflow', presetId }` bindings. */
   workflows: Record<string, string>
+  /** Optional LT project-cycle allowlist for the codex-app harness: project paths in cycle order. Absent = cycle every project with visible chats. */
+  codexProjects?: string[]
 }
 
 const CONTROL_IDS: readonly ControlId[] = [
@@ -111,6 +113,7 @@ const layerSchema = z.object({
 const configSchema = z.object({
   layers: z.array(layerSchema).length(6),
   workflows: z.record(z.string(), z.string()),
+  codexProjects: z.array(z.string()).optional(),
 })
 
 // touchpad cycles focus across occupied session slots. `focus_session` is a

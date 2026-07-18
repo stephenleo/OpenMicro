@@ -4,7 +4,7 @@
 // System Events keystrokes into the frontmost Codex window.
 
 import { execFile } from 'node:child_process'
-import fs from 'node:fs'
+import { createRequire } from 'node:module'
 import os from 'node:os'
 import path from 'node:path'
 import { installCodexHooks } from '../hooks-install.js'
@@ -31,13 +31,16 @@ let dictationHeld = false
 
 // ── Desktop thread/project cycling ──────────────────────────────────────────
 // The app has Next/Previous Chat shortcuts but they stop at the list ends and
-// there is no project-switch shortcut at all. Instead, read the app's own
-// sessions from the shared ~/.codex store and jump directly via the app's
-// copyDeeplink format (codex://threads/<id>) — wrap-around for free.
+// there is no project-switch shortcut at all. Instead, read the app's thread
+// catalog from the shared ~/.codex/state_5.sqlite (archived=0, non-subagent —
+// verified to match the sidebar's per-project chat lists exactly) and jump
+// directly via the app's copyDeeplink format (codex://threads/<id>) —
+// wrap-around for free.
 
 export interface DesktopThread {
   id: string
   cwd: string
+  /** Last-activity ms (the app's recency column) — orders projects, not threads. */
   mtime: number
 }
 
@@ -51,82 +54,67 @@ export interface DesktopCursor {
 // go unseen here, so the next press resumes from the last controller pick.
 const cursor: DesktopCursor = { threadId: null, cwd: null }
 
-const SCAN_CAP = 300 // newest session files parsed per press; older ones are invisible
-const META_READ_BYTES = 262144 // session_meta line incl. base_instructions fits well under this
+// LT project cycle allowlist (config `codexProjects`): the app's sidebar
+// project list is user-curated in-app and not persisted anywhere readable, so
+// removed-but-still-on-disk projects would otherwise reappear in the cycle.
+let projectFilter: string[] | null = null
 
-/** First line of a rollout file parsed as session_meta payload, or null. */
-function readSessionMeta(
-  file: string,
-): { id?: string; cwd?: string; originator?: string; thread_source?: string } | null {
-  let fd: number
-  try {
-    fd = fs.openSync(file, 'r')
-  } catch {
-    return null
-  }
-  try {
-    const buf = Buffer.alloc(META_READ_BYTES)
-    const read = fs.readSync(fd, buf, 0, buf.length, 0)
-    const text = buf.toString('utf8', 0, read)
-    const newline = text.indexOf('\n')
-    const line = newline < 0 ? text : text.slice(0, newline)
-    const parsed = JSON.parse(line) as { type?: string; payload?: unknown }
-    if (parsed.type !== 'session_meta') return null
-    return (parsed.payload ?? null) as ReturnType<typeof readSessionMeta>
-  } catch {
-    return null
-  } finally {
-    fs.closeSync(fd)
-  }
+/**
+ * Restrict LT project cycling to an explicit cwd list (config `codexProjects`).
+ *
+ * Args:
+ *     cwds (string[] | null): Project paths in cycle order, or null to cycle every project found.
+ *
+ * Returns:
+ *     None.
+ */
+export function setCodexProjectFilter(cwds: string[] | null): void {
+  projectFilter = cwds && cwds.length > 0 ? cwds : null
 }
 
 /**
- * List the desktop app's threads, newest first, from the shared ~/.codex session store.
+ * List the desktop app's visible threads from its thread catalog db.
  *
  * Args:
- *     root (string): Sessions directory. Defaults to ~/.codex/sessions.
+ *     dbPath (string): Path to the catalog. Defaults to ~/.codex/state_5.sqlite.
  *
  * Returns:
- *     DesktopThread[]: App-originated threads (CLI + subagent rollouts filtered out), deduped by id.
+ *     DesktopThread[]: Non-archived, non-subagent threads, newest-created first (stable UUIDv7 order).
  */
 export function scanDesktopThreads(
-  root: string = path.join(os.homedir(), '.codex', 'sessions'),
+  dbPath: string = path.join(os.homedir(), '.codex', 'state_5.sqlite'),
 ): DesktopThread[] {
-  let files: string[]
   try {
-    files = fs
-      .readdirSync(root, { recursive: true, encoding: 'utf8' })
-      .filter((f) => f.endsWith('.jsonl'))
+    // Lazy-require: node:sqlite is flagless only on Node 23.4+. On older
+    // runtimes this throws and thread/project cycling degrades to a no-op.
+    const { DatabaseSync } = createRequire(import.meta.url)('node:sqlite') as {
+      DatabaseSync: new (
+        path: string,
+        options: { readOnly: boolean },
+      ) => {
+        prepare(sql: string): { all(): unknown[] }
+        close(): void
+      }
+    }
+    const db = new DatabaseSync(dbPath, { readOnly: true })
+    try {
+      // id is UUIDv7 (creation-ordered) — a stable sort key, unlike recency,
+      // which our own deep-link opens would reshuffle mid-cycle.
+      const rows = db
+        .prepare(
+          `SELECT id, cwd, COALESCE(recency_at_ms, updated_at * 1000) AS recency
+           FROM threads
+           WHERE archived = 0 AND source NOT LIKE '{%'
+           ORDER BY id DESC`,
+        )
+        .all() as { id: string; cwd: string; recency: number }[]
+      return rows.map((r) => ({ id: r.id, cwd: r.cwd, mtime: r.recency }))
+    } finally {
+      db.close()
+    }
   } catch {
     return []
   }
-  const stated: { file: string; mtime: number }[] = []
-  for (const rel of files) {
-    const file = path.join(root, rel)
-    try {
-      stated.push({ file, mtime: fs.statSync(file).mtimeMs })
-    } catch {
-      // deleted mid-scan — skip
-    }
-  }
-  stated.sort((a, b) => b.mtime - a.mtime)
-  const threads: DesktopThread[] = []
-  const seen = new Set<string>()
-  for (const { file, mtime } of stated.slice(0, SCAN_CAP)) {
-    const meta = readSessionMeta(file)
-    if (!meta?.id || !meta.cwd) continue
-    if (meta.originator !== 'Codex Desktop' || meta.thread_source === 'subagent') continue
-    if (seen.has(meta.id)) continue
-    seen.add(meta.id)
-    threads.push({ id: meta.id, cwd: meta.cwd, mtime })
-  }
-  // Cycle order must be stable across presses: opening a thread bumps its
-  // rollout mtime, so mtime order reshuffles under the cursor and cycling
-  // feels random. Thread ids are UUIDv7 (creation-time-ordered) — sort by id
-  // desc for a fixed newest-first walk. ponytail: the sidebar sorts by last
-  // update, not creation; close enough, and stability beats fidelity here.
-  threads.sort((a, b) => b.id.localeCompare(a.id))
-  return threads
 }
 
 /**
@@ -169,8 +157,24 @@ export function cycleProject(
   cur: DesktopCursor = cursor,
 ): DesktopThread | null {
   if (threads.length === 0) return null
-  const cwds = [...new Set(threads.map((t) => t.cwd))] // recency-ordered, first thread wins
-  const index = cwds.indexOf(cur.cwd ?? threads[0]!.cwd)
+  let cwds: string[]
+  if (projectFilter) {
+    // Allowlisted: cycle in the user's configured order, skipping projects
+    // with no visible threads (nothing to open there).
+    cwds = projectFilter.filter((c) => threads.some((t) => t.cwd === c))
+  } else {
+    // Projects ordered by last activity, most recent first — matches how the
+    // sidebar surfaces active projects.
+    const latest = new Map<string, number>()
+    for (const t of threads) {
+      if (t.mtime > (latest.get(t.cwd) ?? -1)) latest.set(t.cwd, t.mtime)
+    }
+    cwds = [...latest.keys()].sort((a, b) => latest.get(b)! - latest.get(a)!)
+  }
+  if (cwds.length === 0) return null
+  // No cursor yet: assume the user sits in the first (most active) project so
+  // the first press visibly switches away from it.
+  const index = cur.cwd === null ? 0 : cwds.indexOf(cur.cwd)
   const nextCwd = cwds[(index + 1) % cwds.length]!
   const next = threads.find((t) => t.cwd === nextCwd)!
   cur.threadId = next.id

@@ -4,6 +4,7 @@ const execFile = vi.hoisted(() => vi.fn())
 vi.mock('node:child_process', () => ({ execFile }))
 
 import fs from 'node:fs'
+import { createRequire } from 'node:module'
 import os from 'node:os'
 import path from 'node:path'
 import { claudeHarness } from '../src/harness/claude.js'
@@ -13,6 +14,7 @@ import {
   cycleProject,
   cycleThread,
   scanDesktopThreads,
+  setCodexProjectFilter,
 } from '../src/harness/codex-app.js'
 import { harnessFor, registerHarness } from '../src/harness/index.js'
 import type { Harness } from '../src/harness/types.js'
@@ -181,25 +183,32 @@ describe('codex-app harness', () => {
     expect(codexAppHarness.resolveAction({ type: 'layer', index: 1 }, ctx)).toBeNull()
   })
 
-  it('scans only desktop-app threads from the session store, newest first', () => {
-    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'om-sessions-'))
-    const day = path.join(root, '2026', '07', '18')
-    fs.mkdirSync(day, { recursive: true })
-    const write = (name: string, payload: Record<string, string>, at: number): void => {
-      const file = path.join(day, name)
-      fs.writeFileSync(file, JSON.stringify({ type: 'session_meta', payload }) + '\n{"next":1}\n')
-      fs.utimesSync(file, at, at)
+  it('scans visible threads from the catalog db in stable id order', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'om-state-'))
+    const dbPath = path.join(dir, 'state.sqlite')
+    const { DatabaseSync } = createRequire(import.meta.url)('node:sqlite') as {
+      DatabaseSync: new (path: string) => {
+        exec(sql: string): void
+        close(): void
+      }
     }
-    write('a.jsonl', { id: 'a', cwd: '/p1', originator: 'Codex Desktop' }, 100)
-    write('b.jsonl', { id: 'b', cwd: '/p2', originator: 'Codex Desktop' }, 300)
-    write('cli.jsonl', { id: 'c', cwd: '/p1', originator: 'codex-tui' }, 400)
-    write(
-      'sub.jsonl',
-      { id: 'd', cwd: '/p1', originator: 'Codex Desktop', thread_source: 'subagent' },
-      500,
-    )
-    expect(scanDesktopThreads(root).map((t) => t.id)).toEqual(['b', 'a'])
-    fs.rmSync(root, { recursive: true, force: true })
+    const db = new DatabaseSync(dbPath)
+    db.exec(`CREATE TABLE threads (
+      id TEXT PRIMARY KEY, cwd TEXT, source TEXT, archived INTEGER,
+      updated_at INTEGER, recency_at_ms INTEGER
+    );
+    INSERT INTO threads VALUES
+      ('a', '/p1', 'cli', 0, 1, 1000),
+      ('b', '/p2', 'vscode', 0, 2, 2000),
+      ('c', '/p1', 'cli', 1, 3, 3000),
+      ('d', '/p1', '{"subagent":"review"}', 0, 4, 4000),
+      ('e', '/p1', 'cli', 0, 5, NULL);`)
+    db.close()
+    const threads = scanDesktopThreads(dbPath)
+    expect(threads.map((t) => t.id)).toEqual(['e', 'b', 'a']) // archived + subagent excluded
+    expect(threads.find((t) => t.id === 'e')?.mtime).toBe(5000) // recency falls back to updated_at
+    expect(scanDesktopThreads(path.join(dir, 'missing.sqlite'))).toEqual([])
+    fs.rmSync(dir, { recursive: true, force: true })
   })
 
   it('cycles threads within a project with wrap-around', () => {
@@ -221,9 +230,23 @@ describe('codex-app harness', () => {
       { id: 'a1', cwd: '/pa', mtime: 2 },
     ]
     const cur = { threadId: null, cwd: null }
-    expect(cycleProject(threads, cur)?.id).toBe('b1') // from /pa (newest) to /pb
+    expect(cycleProject(threads, cur)?.id).toBe('b1') // cold start: switch away from most-active /pa
     expect(cycleProject(threads, cur)?.id).toBe('a2') // wraps back to /pa's newest
     expect(cur).toEqual({ threadId: 'a2', cwd: '/pa' })
+  })
+
+  it('honors the codexProjects allowlist for project cycling', () => {
+    const threads = [
+      { id: 'a1', cwd: '/pa', mtime: 3 },
+      { id: 'b1', cwd: '/pb', mtime: 2 },
+      { id: 'c1', cwd: '/pc', mtime: 1 },
+    ]
+    setCodexProjectFilter(['/pc', '/pa', '/gone'])
+    const cur = { threadId: null, cwd: null }
+    expect(cycleProject(threads, cur)?.cwd).toBe('/pa') // cold start: away from first entry; /pb never visited
+    expect(cycleProject(threads, cur)?.cwd).toBe('/pc') // '/gone' has no threads — skipped
+    expect(cycleProject(threads, cur)?.cwd).toBe('/pa')
+    setCodexProjectFilter(null)
   })
 
   it('delegates hook-event mapping to the codex harness', () => {
