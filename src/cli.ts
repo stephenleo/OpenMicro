@@ -14,7 +14,6 @@ import { isOpenmicroHost, reportTerminalFocus, runAsClient } from './client.js'
 import { HidManager } from './controller/hid-manager.js'
 import { dispatchAction } from './dispatch.js'
 import type { DispatchDeps } from './dispatch.js'
-import { setCodexProjectFilter } from './harness/codex-app.js'
 import { harnessFor } from './harness/index.js'
 import {
   focusAgent,
@@ -89,7 +88,6 @@ try {
   console.error((err as Error).message)
   process.exit(1)
 }
-setCodexProjectFilter(config.codexProjects ?? null)
 
 const install = harness.installHooks()
 if (install.trustNotice) console.error(install.trustNotice)

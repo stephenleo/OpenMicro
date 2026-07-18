@@ -54,24 +54,6 @@ export interface DesktopCursor {
 // go unseen here, so the next press resumes from the last controller pick.
 const cursor: DesktopCursor = { threadId: null, cwd: null }
 
-// LT project cycle allowlist (config `codexProjects`): the app's sidebar
-// project list is user-curated in-app and not persisted anywhere readable, so
-// removed-but-still-on-disk projects would otherwise reappear in the cycle.
-let projectFilter: string[] | null = null
-
-/**
- * Restrict LT project cycling to an explicit cwd list (config `codexProjects`).
- *
- * Args:
- *     cwds (string[] | null): Project paths in cycle order, or null to cycle every project found.
- *
- * Returns:
- *     None.
- */
-export function setCodexProjectFilter(cwds: string[] | null): void {
-  projectFilter = cwds && cwds.length > 0 ? cwds : null
-}
-
 /**
  * List the desktop app's visible threads from its thread catalog db.
  *
@@ -157,21 +139,16 @@ export function cycleProject(
   cur: DesktopCursor = cursor,
 ): DesktopThread | null {
   if (threads.length === 0) return null
-  let cwds: string[]
-  if (projectFilter) {
-    // Allowlisted: cycle in the user's configured order, skipping projects
-    // with no visible threads (nothing to open there).
-    cwds = projectFilter.filter((c) => threads.some((t) => t.cwd === c))
-  } else {
-    // Projects ordered by last activity, most recent first — matches how the
-    // sidebar surfaces active projects.
-    const latest = new Map<string, number>()
-    for (const t of threads) {
-      if (t.mtime > (latest.get(t.cwd) ?? -1)) latest.set(t.cwd, t.mtime)
-    }
-    cwds = [...latest.keys()].sort((a, b) => latest.get(b)! - latest.get(a)!)
+  // Projects ordered by last activity, most recent first: active projects sit
+  // 1-2 presses apart, stale ones trail at the end of the ring and age out as
+  // usage shifts. ponytail: the app's sidebar project list is account-synced
+  // and unreadable locally, so rarely-used projects with visible chats still
+  // appear late in the cycle.
+  const latest = new Map<string, number>()
+  for (const t of threads) {
+    if (t.mtime > (latest.get(t.cwd) ?? -1)) latest.set(t.cwd, t.mtime)
   }
-  if (cwds.length === 0) return null
+  const cwds = [...latest.keys()].sort((a, b) => latest.get(b)! - latest.get(a)!)
   // No cursor yet: assume the user sits in the first (most active) project so
   // the first press visibly switches away from it.
   const index = cur.cwd === null ? 0 : cwds.indexOf(cur.cwd)

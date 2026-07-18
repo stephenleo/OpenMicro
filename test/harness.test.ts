@@ -14,7 +14,6 @@ import {
   cycleProject,
   cycleThread,
   scanDesktopThreads,
-  setCodexProjectFilter,
 } from '../src/harness/codex-app.js'
 import { harnessFor, registerHarness } from '../src/harness/index.js'
 import type { Harness } from '../src/harness/types.js'
@@ -235,18 +234,13 @@ describe('codex-app harness', () => {
     expect(cur).toEqual({ threadId: 'a2', cwd: '/pa' })
   })
 
-  it('honors the codexProjects allowlist for project cycling', () => {
+  it('returns to the most active project when the cursor sits on an unknown cwd', () => {
     const threads = [
       { id: 'a1', cwd: '/pa', mtime: 3 },
       { id: 'b1', cwd: '/pb', mtime: 2 },
-      { id: 'c1', cwd: '/pc', mtime: 1 },
     ]
-    setCodexProjectFilter(['/pc', '/pa', '/gone'])
-    const cur = { threadId: null, cwd: null }
-    expect(cycleProject(threads, cur)?.cwd).toBe('/pa') // cold start: away from first entry; /pb never visited
-    expect(cycleProject(threads, cur)?.cwd).toBe('/pc') // '/gone' has no threads — skipped
+    const cur = { threadId: 'x', cwd: '/gone' }
     expect(cycleProject(threads, cur)?.cwd).toBe('/pa')
-    setCodexProjectFilter(null)
   })
 
   it('delegates hook-event mapping to the codex harness', () => {
