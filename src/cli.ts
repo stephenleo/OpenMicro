@@ -420,6 +420,7 @@ if (!isHost) {
 
   /** Voice is live in at most one pane: the focused one. Focus left it → stop. */
   function voiceFollowFocus(): void {
+    if (!usesPty) return // GUI mode: voice targets the app, not a pane — only triangle stops it
     if (voiceSessionKey === null) return
     if (herdrForeignFocus || voiceSessionKey !== focusKey()) stopVoice()
   }
@@ -443,6 +444,9 @@ if (!isHost) {
   // UserPromptSubmit hook is the ground truth for that moment: drop tracking
   // without sending anything.
   server.on('prompt-submit', (e: { sessionId: string; hostOwned: boolean }) => {
+    // GUI mode: dropping tracking here would desync the harness's held
+    // dictation chord — voice state is owned by the controller toggle alone.
+    if (!usesPty) return
     if (voiceSessionKey === (e.hostOwned ? SELF_SESSION_KEY : e.sessionId)) voiceSessionKey = null
   })
 
@@ -450,6 +454,10 @@ if (!isHost) {
   // works for plain multi-terminal setups, no herdr required): disengage
   // dictation in it. Focus-in is ignored; only the loss matters for voice.
   server.on('terminal-focus', (e: { wrapperId: string; focused: boolean }) => {
+    // GUI mode: the app keystroke itself steals OS focus from our terminal on
+    // every press — stopping voice on that focus-out would cut dictation off
+    // moments after it starts.
+    if (!usesPty) return
     if (e.focused || voiceSessionKey === null) return
     const owner =
       voiceSessionKey === SELF_SESSION_KEY ? wrapperId : server.sessionOwners.get(voiceSessionKey)

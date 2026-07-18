@@ -23,6 +23,9 @@ const KEY_EQUIVALENTS: Record<string, string> = {
   '\x15': 'keystroke "a" using command down\nkey code 51',
 }
 
+// Whether the dictation key chord is currently held down (see push_to_talk).
+let dictationHeld = false
+
 export const codexAppHarness: Harness = {
   kind: 'codex-app',
   usesPty: false,
@@ -57,8 +60,19 @@ export const codexAppHarness: Harness = {
       case 'accept':
         return { bytes: 'osascript:keystroke return' }
       case 'push_to_talk':
-        // Ctrl+Shift+D toggles dictation in the app (a toggle, not a hold).
-        return { bytes: 'osascript:keystroke "d" using {control down, shift down}' }
+        // Ctrl+Shift+D = the app's composer.startDictation binding, and it is
+        // hold-to-dictate: dictation runs only while the keys stay down, so an
+        // instantaneous press+release starts and stops it in the same moment.
+        // Emulate the hold — first press holds the keys down, second press
+        // releases them (verified live: mic engages while held, transcript
+        // inserts on release).
+        // ponytail: module state; if the process dies mid-hold the keys stay
+        // down until the user taps them physically. Upgrade path: plumb
+        // controller press/release through dispatch for true push-to-talk.
+        dictationHeld = !dictationHeld
+        return dictationHeld
+          ? { bytes: 'osascript:key down control\nkey down shift\nkey down "d"' }
+          : { bytes: 'osascript:key up "d"\nkey up shift\nkey up control' }
       case 'new_chat':
         return { bytes: 'open:codex://new' }
       case 'prompt':

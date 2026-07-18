@@ -135,8 +135,13 @@ describe('codex-app harness', () => {
     expect(codexAppHarness.resolveAction({ type: 'accept' }, ctx)).toEqual({
       bytes: 'osascript:keystroke return',
     })
+    // push_to_talk emulates the app's hold-to-dictate chord: first call holds
+    // the keys down, second call releases them.
     expect(codexAppHarness.resolveAction({ type: 'push_to_talk' }, ctx)).toEqual({
-      bytes: 'osascript:keystroke "d" using {control down, shift down}',
+      bytes: 'osascript:key down control\nkey down shift\nkey down "d"',
+    })
+    expect(codexAppHarness.resolveAction({ type: 'push_to_talk' }, ctx)).toEqual({
+      bytes: 'osascript:key up "d"\nkey up shift\nkey up control',
     })
     expect(codexAppHarness.resolveAction({ type: 'new_chat' }, ctx)).toEqual({
       bytes: 'open:codex://new',
