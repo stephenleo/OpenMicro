@@ -83,12 +83,20 @@ export const codexAppHarness: Harness = {
         return { bytes: 'osascript:key code 53' } // Esc — stop generation / dismiss
       case 'thinking_depth':
         return null // documented gap: no reasoning-effort control in the app
+      case 'focus_session':
+        // Touchpad: no panes in the app — cycle chats instead via the app's
+        // Next Chat command (Cmd+Shift+], key code 30 = ']').
+        return { bytes: 'osascript:key code 30 using {command down, shift down}' }
+      case 'herdr_space':
+        // LT: projects open one-per-window — cycle app windows (Cmd+`,
+        // key code 50 = '`').
+        return { bytes: 'osascript:key code 50 using command down' }
       case 'keys': {
         const equivalent = KEY_EQUIVALENTS[action.bytes]
         return equivalent ? { bytes: `osascript:${equivalent}` } : null
       }
       default:
-        return null // workflow/focus_session/layer never reach a harness
+        return null // workflow/layer never reach a harness
     }
   },
 

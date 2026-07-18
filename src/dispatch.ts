@@ -40,16 +40,26 @@ export interface DispatchDeps {
  *     None.
  */
 export function dispatchAction(action: Action, deps: DispatchDeps): void {
+  // GUI harnesses have no panes or herdr workspaces to cycle: focus_session
+  // and herdr_space fall through to the harness, which maps them to an in-app
+  // equivalent (e.g. next chat / next window) or null.
+  const gui = deps.harness.usesPty === false
   switch (action.type) {
     case 'focus_session':
-      deps.focusSession(action.index)
-      return
+      if (!gui) {
+        deps.focusSession(action.index)
+        return
+      }
+      break
     case 'layer':
       deps.setLayer(action.index)
       return
     case 'herdr_space':
-      deps.cycleHerdrSpace()
-      return
+      if (!gui) {
+        deps.cycleHerdrSpace()
+        return
+      }
+      break
     case 'workflow': {
       const text = deps.config.workflows[action.presetId]
       if (text === undefined) return // unknown preset — nothing to send
@@ -60,13 +70,13 @@ export function dispatchAction(action: Action, deps: DispatchDeps): void {
       if (resolved) deps.write(resolved.bytes)
       return
     }
-    default: {
-      const resolved = deps.harness.resolveAction(action, {
-        thinkingLevel: deps.getThinkingLevel(),
-      })
-      if (!resolved) return // documented gap for this harness
-      if (resolved.thinkingLevel !== undefined) deps.setThinkingLevel(resolved.thinkingLevel)
-      deps.write(resolved.bytes)
-    }
+    default:
+      break
   }
+  const resolved = deps.harness.resolveAction(action, {
+    thinkingLevel: deps.getThinkingLevel(),
+  })
+  if (!resolved) return // documented gap for this harness
+  if (resolved.thinkingLevel !== undefined) deps.setThinkingLevel(resolved.thinkingLevel)
+  deps.write(resolved.bytes)
 }

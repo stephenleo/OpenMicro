@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest'
 import { dispatchAction } from '../src/dispatch.js'
 import type { DispatchDeps } from '../src/dispatch.js'
 import { claudeHarness } from '../src/harness/claude.js'
+import { codexAppHarness } from '../src/harness/codex-app.js'
 import { codexHarness } from '../src/harness/codex.js'
 import type { Action } from '../src/harness/types.js'
 import { DEFAULT_CONFIG } from '../src/layers.js'
@@ -82,6 +83,18 @@ describe('dispatchAction', () => {
     dispatchAction({ type: 'herdr_space' }, deps)
     expect(herdrCycles).toEqual([1])
     expect(writes).toEqual([]) // never reaches the harness
+  })
+
+  it('routes focus_session and herdr_space to the harness for GUI harnesses', () => {
+    const { deps, focus, herdrCycles, writes } = makeDeps({ harness: codexAppHarness })
+    dispatchAction({ type: 'focus_session', index: -1 }, deps)
+    dispatchAction({ type: 'herdr_space' }, deps)
+    expect(focus).toEqual([]) // core pane cycling is bypassed in GUI mode
+    expect(herdrCycles).toEqual([])
+    expect(writes).toEqual([
+      'osascript:key code 30 using {command down, shift down}',
+      'osascript:key code 50 using command down',
+    ])
   })
 
   it('silently skips a documented harness gap (Codex push-to-talk)', () => {

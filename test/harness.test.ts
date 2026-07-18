@@ -170,8 +170,16 @@ describe('codex-app harness', () => {
     expect(codexAppHarness.resolveAction({ type: 'thinking_depth', delta: 1 }, ctx)).toBeNull()
     expect(codexAppHarness.resolveAction({ type: 'keys', bytes: '\x07' }, ctx)).toBeNull()
     expect(codexAppHarness.resolveAction({ type: 'workflow', presetId: 'x' }, ctx)).toBeNull()
-    expect(codexAppHarness.resolveAction({ type: 'focus_session', index: 0 }, ctx)).toBeNull()
     expect(codexAppHarness.resolveAction({ type: 'layer', index: 1 }, ctx)).toBeNull()
+  })
+
+  it('maps focus_session to Next Chat and herdr_space to window cycling', () => {
+    expect(codexAppHarness.resolveAction({ type: 'focus_session', index: -1 }, ctx)).toEqual({
+      bytes: 'osascript:key code 30 using {command down, shift down}',
+    })
+    expect(codexAppHarness.resolveAction({ type: 'herdr_space' }, ctx)).toEqual({
+      bytes: 'osascript:key code 50 using command down',
+    })
   })
 
   it('delegates hook-event mapping to the codex harness', () => {
