@@ -22,9 +22,11 @@ OpenMicro installs its lifecycle hooks automatically. If Codex reports that its 
 
 Controller support depends on the exact device and connection. Check the [controller compatibility guide](CONTROLLERS.md) before you start, or run `openmicro doctor` to test your controller.
 
-## Default DualSense controls
+## Default controls
 
-![Default OpenMicro DualSense controls for prompts, workflows, thinking depth, layers, and session focus](assets/default-dualsense-controls.png)
+|                                   DualSense                                    |                                      GameSir G7 Pro                                      |
+| :----------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------: |
+| ![Default OpenMicro DualSense controls](assets/default-dualsense-controls.png) | ![Default OpenMicro GameSir G7 Pro controls](assets/default-gamesir-g7-pro-controls.png) |
 
 ### Text control reference
 
