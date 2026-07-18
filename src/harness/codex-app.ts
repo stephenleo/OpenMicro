@@ -4,6 +4,9 @@
 // System Events keystrokes into the frontmost Codex window.
 
 import { execFile } from 'node:child_process'
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
 import { installCodexHooks } from '../hooks-install.js'
 import { logger } from '../logger.js'
 import { codexHarness } from './codex.js'
@@ -25,6 +28,149 @@ const KEY_EQUIVALENTS: Record<string, string> = {
 
 // Whether the dictation key chord is currently held down (see push_to_talk).
 let dictationHeld = false
+
+// ── Desktop thread/project cycling ──────────────────────────────────────────
+// The app has Next/Previous Chat shortcuts but they stop at the list ends and
+// there is no project-switch shortcut at all. Instead, read the app's own
+// sessions from the shared ~/.codex store and jump directly via the app's
+// copyDeeplink format (codex://threads/<id>) — wrap-around for free.
+
+export interface DesktopThread {
+  id: string
+  cwd: string
+  mtime: number
+}
+
+/** Touchpad/LT cursor into the desktop thread list. */
+export interface DesktopCursor {
+  threadId: string | null
+  cwd: string | null
+}
+
+// ponytail: best-effort cursor. Threads the user opens by clicking in the app
+// go unseen here, so the next press resumes from the last controller pick.
+const cursor: DesktopCursor = { threadId: null, cwd: null }
+
+const SCAN_CAP = 300 // newest session files parsed per press; older ones are invisible
+const META_READ_BYTES = 262144 // session_meta line incl. base_instructions fits well under this
+
+/** First line of a rollout file parsed as session_meta payload, or null. */
+function readSessionMeta(
+  file: string,
+): { id?: string; cwd?: string; originator?: string; thread_source?: string } | null {
+  let fd: number
+  try {
+    fd = fs.openSync(file, 'r')
+  } catch {
+    return null
+  }
+  try {
+    const buf = Buffer.alloc(META_READ_BYTES)
+    const read = fs.readSync(fd, buf, 0, buf.length, 0)
+    const text = buf.toString('utf8', 0, read)
+    const newline = text.indexOf('\n')
+    const line = newline < 0 ? text : text.slice(0, newline)
+    const parsed = JSON.parse(line) as { type?: string; payload?: unknown }
+    if (parsed.type !== 'session_meta') return null
+    return (parsed.payload ?? null) as ReturnType<typeof readSessionMeta>
+  } catch {
+    return null
+  } finally {
+    fs.closeSync(fd)
+  }
+}
+
+/**
+ * List the desktop app's threads, newest first, from the shared ~/.codex session store.
+ *
+ * Args:
+ *     root (string): Sessions directory. Defaults to ~/.codex/sessions.
+ *
+ * Returns:
+ *     DesktopThread[]: App-originated threads (CLI + subagent rollouts filtered out), deduped by id.
+ */
+export function scanDesktopThreads(
+  root: string = path.join(os.homedir(), '.codex', 'sessions'),
+): DesktopThread[] {
+  let files: string[]
+  try {
+    files = fs
+      .readdirSync(root, { recursive: true, encoding: 'utf8' })
+      .filter((f) => f.endsWith('.jsonl'))
+  } catch {
+    return []
+  }
+  const stated: { file: string; mtime: number }[] = []
+  for (const rel of files) {
+    const file = path.join(root, rel)
+    try {
+      stated.push({ file, mtime: fs.statSync(file).mtimeMs })
+    } catch {
+      // deleted mid-scan — skip
+    }
+  }
+  stated.sort((a, b) => b.mtime - a.mtime)
+  const threads: DesktopThread[] = []
+  const seen = new Set<string>()
+  for (const { file, mtime } of stated.slice(0, SCAN_CAP)) {
+    const meta = readSessionMeta(file)
+    if (!meta?.id || !meta.cwd) continue
+    if (meta.originator !== 'Codex Desktop' || meta.thread_source === 'subagent') continue
+    if (seen.has(meta.id)) continue
+    seen.add(meta.id)
+    threads.push({ id: meta.id, cwd: meta.cwd, mtime })
+  }
+  return threads
+}
+
+/**
+ * Advance the cursor to the next thread within the current project (wrapping).
+ *
+ * Args:
+ *     threads (DesktopThread[]): Threads newest-first from scanDesktopThreads.
+ *     cur (DesktopCursor): Cursor to advance. Defaults to the module cursor.
+ *
+ * Returns:
+ *     DesktopThread | null: The thread to open, or null when there are none.
+ */
+export function cycleThread(
+  threads: DesktopThread[],
+  cur: DesktopCursor = cursor,
+): DesktopThread | null {
+  if (threads.length === 0) return null
+  const cwd = cur.cwd ?? threads[0]!.cwd
+  const scoped = threads.filter((t) => t.cwd === cwd)
+  const list = scoped.length > 0 ? scoped : threads
+  const index = list.findIndex((t) => t.id === cur.threadId)
+  const next = list[(index + 1) % list.length]!
+  cur.threadId = next.id
+  cur.cwd = next.cwd
+  return next
+}
+
+/**
+ * Advance the cursor to the next project's most recent thread (wrapping).
+ *
+ * Args:
+ *     threads (DesktopThread[]): Threads newest-first from scanDesktopThreads.
+ *     cur (DesktopCursor): Cursor to advance. Defaults to the module cursor.
+ *
+ * Returns:
+ *     DesktopThread | null: The thread to open, or null when there are none.
+ */
+export function cycleProject(
+  threads: DesktopThread[],
+  cur: DesktopCursor = cursor,
+): DesktopThread | null {
+  if (threads.length === 0) return null
+  const cwds = [...new Set(threads.map((t) => t.cwd))] // recency-ordered, first thread wins
+  const index = cwds.indexOf(cur.cwd ?? threads[0]!.cwd)
+  const nextCwd = cwds[(index + 1) % cwds.length]!
+  const next = threads.find((t) => t.cwd === nextCwd)!
+  cur.threadId = next.id
+  cur.cwd = next.cwd
+  return next
+}
 
 export const codexAppHarness: Harness = {
   kind: 'codex-app',
@@ -83,14 +229,16 @@ export const codexAppHarness: Harness = {
         return { bytes: 'osascript:key code 53' } // Esc — stop generation / dismiss
       case 'thinking_depth':
         return null // documented gap: no reasoning-effort control in the app
-      case 'focus_session':
-        // Touchpad: no panes in the app — cycle chats instead via the app's
-        // Next Chat command (Cmd+Shift+], key code 30 = ']').
-        return { bytes: 'osascript:key code 30 using {command down, shift down}' }
-      case 'herdr_space':
-        // LT: projects open one-per-window — cycle app windows (Cmd+`,
-        // key code 50 = '`').
-        return { bytes: 'osascript:key code 50 using command down' }
+      case 'focus_session': {
+        // Touchpad: cycle the current project's chats with wrap-around.
+        const next = cycleThread(scanDesktopThreads())
+        return next ? { bytes: `open:codex://threads/${next.id}` } : null
+      }
+      case 'herdr_space': {
+        // LT: jump to the next project's most recent chat (wrapping).
+        const next = cycleProject(scanDesktopThreads())
+        return next ? { bytes: `open:codex://threads/${next.id}` } : null
+      }
       case 'keys': {
         const equivalent = KEY_EQUIVALENTS[action.bytes]
         return equivalent ? { bytes: `osascript:${equivalent}` } : null

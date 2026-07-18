@@ -3,9 +3,17 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const execFile = vi.hoisted(() => vi.fn())
 vi.mock('node:child_process', () => ({ execFile }))
 
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
 import { claudeHarness } from '../src/harness/claude.js'
 import { codexHarness } from '../src/harness/codex.js'
-import { codexAppHarness } from '../src/harness/codex-app.js'
+import {
+  codexAppHarness,
+  cycleProject,
+  cycleThread,
+  scanDesktopThreads,
+} from '../src/harness/codex-app.js'
 import { harnessFor, registerHarness } from '../src/harness/index.js'
 import type { Harness } from '../src/harness/types.js'
 
@@ -173,13 +181,49 @@ describe('codex-app harness', () => {
     expect(codexAppHarness.resolveAction({ type: 'layer', index: 1 }, ctx)).toBeNull()
   })
 
-  it('maps focus_session to Next Chat and herdr_space to window cycling', () => {
-    expect(codexAppHarness.resolveAction({ type: 'focus_session', index: -1 }, ctx)).toEqual({
-      bytes: 'osascript:key code 30 using {command down, shift down}',
-    })
-    expect(codexAppHarness.resolveAction({ type: 'herdr_space' }, ctx)).toEqual({
-      bytes: 'osascript:key code 50 using command down',
-    })
+  it('scans only desktop-app threads from the session store, newest first', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'om-sessions-'))
+    const day = path.join(root, '2026', '07', '18')
+    fs.mkdirSync(day, { recursive: true })
+    const write = (name: string, payload: Record<string, string>, at: number): void => {
+      const file = path.join(day, name)
+      fs.writeFileSync(file, JSON.stringify({ type: 'session_meta', payload }) + '\n{"next":1}\n')
+      fs.utimesSync(file, at, at)
+    }
+    write('a.jsonl', { id: 'a', cwd: '/p1', originator: 'Codex Desktop' }, 100)
+    write('b.jsonl', { id: 'b', cwd: '/p2', originator: 'Codex Desktop' }, 300)
+    write('cli.jsonl', { id: 'c', cwd: '/p1', originator: 'codex-tui' }, 400)
+    write(
+      'sub.jsonl',
+      { id: 'd', cwd: '/p1', originator: 'Codex Desktop', thread_source: 'subagent' },
+      500,
+    )
+    expect(scanDesktopThreads(root).map((t) => t.id)).toEqual(['b', 'a'])
+    fs.rmSync(root, { recursive: true, force: true })
+  })
+
+  it('cycles threads within a project with wrap-around', () => {
+    const threads = [
+      { id: 't3', cwd: '/p1', mtime: 3 },
+      { id: 'other', cwd: '/p2', mtime: 2 },
+      { id: 't1', cwd: '/p1', mtime: 1 },
+    ]
+    const cur = { threadId: null, cwd: null }
+    expect(cycleThread(threads, cur)?.id).toBe('t3') // nothing selected yet — start at newest
+    expect(cycleThread(threads, cur)?.id).toBe('t1')
+    expect(cycleThread(threads, cur)?.id).toBe('t3') // wraps, never leaves /p1
+  })
+
+  it('cycles projects by recency with wrap-around, landing on the newest thread', () => {
+    const threads = [
+      { id: 'a2', cwd: '/pa', mtime: 4 },
+      { id: 'b1', cwd: '/pb', mtime: 3 },
+      { id: 'a1', cwd: '/pa', mtime: 2 },
+    ]
+    const cur = { threadId: null, cwd: null }
+    expect(cycleProject(threads, cur)?.id).toBe('b1') // from /pa (newest) to /pb
+    expect(cycleProject(threads, cur)?.id).toBe('a2') // wraps back to /pa's newest
+    expect(cur).toEqual({ threadId: 'a2', cwd: '/pa' })
   })
 
   it('delegates hook-event mapping to the codex harness', () => {
