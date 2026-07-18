@@ -136,7 +136,7 @@ describe('codex-app harness', () => {
       bytes: 'osascript:keystroke return',
     })
     expect(codexAppHarness.resolveAction({ type: 'push_to_talk' }, ctx)).toEqual({
-      bytes: 'osascript:keystroke "d" using {control down, shift down}',
+      bytes: 'osascript:key code 2 using {control down, shift down}',
     })
     expect(codexAppHarness.resolveAction({ type: 'new_chat' }, ctx)).toEqual({
       bytes: 'open:codex://new',

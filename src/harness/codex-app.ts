@@ -57,8 +57,11 @@ export const codexAppHarness: Harness = {
       case 'accept':
         return { bytes: 'osascript:keystroke return' }
       case 'push_to_talk':
-        // Ctrl+Shift+D toggles dictation in the app (a toggle, not a hold).
-        return { bytes: 'osascript:keystroke "d" using {control down, shift down}' }
+        // Ctrl+Shift+D = the app's composer.startDictation default binding
+        // (from its own command table). Must be sent as `key code 2` (physical
+        // D), not `keystroke "d"` — keystroke events carry no virtual keycode,
+        // so the app's Chromium keybinding matcher never sees them.
+        return { bytes: 'osascript:key code 2 using {control down, shift down}' }
       case 'new_chat':
         return { bytes: 'open:codex://new' }
       case 'prompt':
