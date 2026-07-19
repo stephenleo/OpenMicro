@@ -18,7 +18,7 @@ openmicro codex-app # drive the Codex macOS desktop app
 
 `openmicro codex-app` drives the Codex desktop app instead of a terminal CLI: new chat and prompt prefill use `codex://` deep links (no permission needed), while submit (Enter), reject (Esc), dictation (Ctrl+Shift+D), d-pad arrows, and Ctrl+U send keystrokes and need Accessibility permission for your terminal. A stick-flick prompt prefills the composer; press submit to send it. The app launches automatically and the terminal shows live status (controller, actions, agent state).
 
-The thinking-depth dial (right-stick rotation) needs one-time setup: the app ships "Increase reasoning effort" and "Decrease reasoning effort" shortcuts unassigned, and assignments are account-synced so OpenMicro cannot set them for you. In the Codex app open Settings → Keyboard shortcuts, search "effort", and assign Increase to `⌃⌥=` and Decrease to `⌃⌥-` — right-stick quarter-turns then step the composer's reasoning effort.
+The thinking-depth dial (right-stick rotation) needs one-time setup: the app ships "Increase reasoning effort" and "Decrease reasoning effort" shortcuts unassigned, and assignments are account-synced so OpenMicro cannot set them for you. In the Codex app open Settings → Keyboard shortcuts, search "effort", and assign Increase to `+` and Decrease to `-` — right-stick quarter-turns then step the composer's reasoning effort. If the bare keys interfere with typing `+`/`-` in the composer, pick modified chords instead and remap `thinking_depth` in your OpenMicro config to matching `keys` bindings.
 
 OpenMicro installs its lifecycle hooks automatically. If Codex reports that its hooks changed, open `/hooks` in Codex and trust the OpenMicro hooks.
 
