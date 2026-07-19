@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.1.0] - 2026-07-19
+
+### Added
+
+- **Codex app: thinking-depth dial.** Right-stick flick right/left steps the composer's reasoning effort via the app's user-assignable "Increase/Decrease reasoning effort" shortcuts (one-time setup: assign `⌃⌥=` / `⌃⌥-` in the app's Keyboard shortcuts — assignments are account-synced, so OpenMicro cannot set them at install). Emitted as discrete modifier key-downs; the app's shortcut listener ignores inline `using {...}` chords. Note the app's own Decrease shortcut stops one step short of the lowest effort level.
+- **Codex app: right-stick click (R3) opens the model picker** (assign "Open model picker" to `⌃⇧M`), so the effort slider is visible while the dial steps it. New `r3` default binding emits the CSI-u encoding of Ctrl+Shift+M; terminal harnesses ignore it. Existing config files predate the binding — add `"r3": { "type": "keys", "bytes": "\u001b[109;6u" }` to Layer 1 to pick it up.
+
+### Changed
+
+- **Thinking dial defaults to right-stick flicks instead of cw/ccw rotation** — rotation proved finicky in live use. `rstick_cw`/`rstick_ccw` gestures remain available for remapping.
+
+### Fixed
+
+- **DualSense: y-axis was inverted vs the project convention** (`dualsense-ts` reports up as positive). Rotation gestures ran backward and up/down stick flicks were swapped on DualSense; both now match the documented directions on all controllers.
+
 ## [1.0.2] - 2026-07-19
 
 ### Fixed
