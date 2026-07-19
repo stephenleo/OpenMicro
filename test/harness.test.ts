@@ -177,10 +177,10 @@ describe('codex-app harness', () => {
 
   it('maps thinking_depth to the user-assigned effort shortcut chords', () => {
     expect(codexAppHarness.resolveAction({ type: 'thinking_depth', delta: 1 }, ctx)).toEqual({
-      bytes: 'osascript:keystroke "+" using control down',
+      bytes: 'osascript:key code 24 using {control down, option down}',
     })
     expect(codexAppHarness.resolveAction({ type: 'thinking_depth', delta: -1 }, ctx)).toEqual({
-      bytes: 'osascript:keystroke "-" using control down',
+      bytes: 'osascript:key code 27 using {control down, option down}',
     })
   })
 
