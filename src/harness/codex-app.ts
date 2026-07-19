@@ -30,9 +30,6 @@ const KEY_EQUIVALENTS: Record<string, string> = {
   '\x1b[109;6u': 'key down control\nkey down shift\nkey code 46\nkey up shift\nkey up control',
 }
 
-// Whether the dictation key chord is currently held down (see push_to_talk).
-let dictationHeld = false
-
 // Synthetic `key down` events are system-wide: a chord whose `key up` never
 // lands (osascript error/timeout, process death, interleaved chords) leaves
 // modifiers stuck for the whole machine — Ctrl turns clicks into right-clicks
@@ -75,7 +72,6 @@ function enqueueOsascript(
  *     None.
  */
 function releaseAllKeys(): void {
-  dictationHeld = false
   try {
     execFileSync(
       'osascript',
@@ -253,18 +249,13 @@ export const codexAppHarness: Harness = {
         return { bytes: 'osascript:keystroke return' }
       case 'push_to_talk':
         // Ctrl+Shift+D = the app's composer.startDictation binding, and it is
-        // hold-to-dictate: dictation runs only while the keys stay down, so an
-        // instantaneous press+release starts and stops it in the same moment.
-        // Emulate the hold — first press holds the keys down, second press
-        // releases them (verified live: mic engages while held, transcript
-        // inserts on release).
-        // ponytail: module state; if the process dies mid-hold the keys stay
-        // down until the user taps them physically. Upgrade path: plumb
-        // controller press/release through dispatch for true push-to-talk.
-        dictationHeld = !dictationHeld
-        return dictationHeld
-          ? { bytes: 'osascript:key down control\nkey down shift\nkey down "d"' }
-          : { bytes: 'osascript:key up "d"\nkey up shift\nkey up control' }
+        // hold-to-dictate: mic engages while the keys stay down, transcript
+        // inserts on release. The cli forwards the controller edge in
+        // action.pressed — button down holds the chord, button up releases it
+        // — so dictation runs exactly while the button is held.
+        return action.pressed === false
+          ? { bytes: 'osascript:key up "d"\nkey up shift\nkey up control' }
+          : { bytes: 'osascript:key down control\nkey down shift\nkey down "d"' }
       case 'new_chat':
         // codex://threads/new, not codex://new — the app's deep-link parser
         // drops a bare codex://new (it requires a prompt/path/originUrl query

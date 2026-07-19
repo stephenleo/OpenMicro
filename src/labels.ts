@@ -1,16 +1,16 @@
 // Human-readable labels for the GUI status log: physical control names per
-// controller family (triangle vs Y) and friendly action descriptions, so a
-// press logs as "triangle → push-to-talk" instead of raw keystroke bytes.
+// controller family (△ vs Y) and friendly action descriptions, so a
+// press logs as "△ → push-to-talk" instead of raw keystroke bytes.
 
 import type { Action } from './harness/types.js'
 import type { ControlId } from './layers.js'
 import type { ControllerType } from './types.js'
 
 const PLAYSTATION_FACE: Record<string, string> = {
-  south: 'cross',
-  east: 'circle',
-  west: 'square',
-  north: 'triangle',
+  south: '✕',
+  east: '○',
+  west: '□',
+  north: '△',
   menu: 'options',
   view: 'create',
 }
@@ -58,7 +58,7 @@ const COMMON_CONTROLS: Record<string, string> = {
  *     controllerType (ControllerType): Connected pad family, from the 'connected' event.
  *
  * Returns:
- *     string: Physical name, e.g. 'triangle' (DualSense) or 'Y' (Xbox/GameSir).
+ *     string: Physical name, e.g. '△' (DualSense) or 'Y' (Xbox/GameSir).
  */
 export function controlLabel(id: ControlId, controllerType: ControllerType): string {
   const face =

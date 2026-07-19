@@ -525,6 +525,13 @@ if (!isHost) {
         } else repeater.release(e.button)
         return
       }
+      // GUI dictation is hold-to-talk: forward both button edges so the chord
+      // stays down exactly while the button is held (pty voice stays a toggle).
+      if (!usesPty && action.type === 'push_to_talk' && e.kind === 'button') {
+        if (e.pressed) announce(action)
+        dispatchAction({ ...action, pressed: e.pressed }, deps)
+        return
+      }
       if (e.kind === 'button' && !e.pressed) return // press-only for non-repeating buttons
       announce(action)
       if (action.type === 'push_to_talk') retargetVoice()

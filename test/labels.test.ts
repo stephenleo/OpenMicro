@@ -2,9 +2,11 @@ import { describe, expect, it } from 'vitest'
 import { actionLabel, controlLabel } from '../src/labels.js'
 
 describe('controlLabel', () => {
-  it('uses PlayStation face names for dualsense and ds4', () => {
-    expect(controlLabel('north', 'dualsense')).toBe('triangle')
-    expect(controlLabel('south', 'ds4')).toBe('cross')
+  it('uses PlayStation face symbols for dualsense and ds4', () => {
+    expect(controlLabel('north', 'dualsense')).toBe('△')
+    expect(controlLabel('west', 'dualsense')).toBe('□')
+    expect(controlLabel('east', 'dualsense')).toBe('○')
+    expect(controlLabel('south', 'ds4')).toBe('✕')
     expect(controlLabel('menu', 'dualsense')).toBe('options')
   })
 
