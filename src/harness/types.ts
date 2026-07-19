@@ -40,4 +40,6 @@ export interface Harness {
   ): { bytes: string; thinkingLevel?: number } | null
   /** Side-effect runner for usesPty:false harnesses — the cli calls it with resolveAction's bytes in place of a pty write. */
   execute?(bytes: string): void
+  /** Shutdown cleanup for usesPty:false harnesses — must undo any lingering system side effects (e.g. release synthetic keys still held down). */
+  dispose?(): void
 }

@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const execFile = vi.hoisted(() => vi.fn())
-vi.mock('node:child_process', () => ({ execFile }))
+const execFileSync = vi.hoisted(() => vi.fn())
+vi.mock('node:child_process', () => ({ execFile, execFileSync }))
 
 import fs from 'node:fs'
 import { createRequire } from 'node:module'
@@ -134,6 +135,13 @@ describe('codex-app harness', () => {
 
   beforeEach(() => {
     execFile.mockReset()
+    execFileSync.mockReset()
+    // Osascript runs are queued; the callback must fire or the queue jams and
+    // later tests silently never reach execFile.
+    execFile.mockImplementation((...args: unknown[]) => {
+      const cb = args[args.length - 1]
+      if (typeof cb === 'function') cb(null, '', '')
+    })
   })
 
   it('is a GUI harness (no pty)', () => {
@@ -272,8 +280,9 @@ describe('codex-app harness', () => {
     expect(execFile).toHaveBeenCalledWith('open', ['codex://new'], expect.any(Function))
   })
 
-  it('executes osascript: bytes as activate + System Events keystroke', () => {
+  it('executes osascript: bytes as activate + System Events keystroke', async () => {
     codexAppHarness.execute?.('osascript:keystroke return')
+    await new Promise((resolve) => setImmediate(resolve)) // queued behind a microtask
     expect(execFile).toHaveBeenCalledWith(
       'osascript',
       [
@@ -284,7 +293,45 @@ describe('codex-app harness', () => {
         '-e',
         'tell application "System Events" to keystroke return',
       ],
+      { timeout: 5000 },
       expect.any(Function),
+    )
+  })
+
+  it('serializes concurrent osascript chords instead of interleaving them', async () => {
+    codexAppHarness.execute?.('osascript:key down control\nkey up control')
+    codexAppHarness.execute?.('osascript:keystroke return')
+    await new Promise((resolve) => setImmediate(resolve))
+    expect(execFile).toHaveBeenCalledTimes(2)
+    // Second chord runs strictly after the first one's callback fired.
+    const firstArgs = execFile.mock.calls[0]![1] as string[]
+    expect(firstArgs).toContain('tell application "System Events" to key down control')
+  })
+
+  it('releases all held keys when a key-down chord fails', async () => {
+    execFile.mockImplementation((...args: unknown[]) => {
+      const cb = args[args.length - 1]
+      if (typeof cb === 'function') cb(new Error('timeout'), '', '')
+    })
+    codexAppHarness.execute?.('osascript:key down control\nkey code 24\nkey up control')
+    await new Promise((resolve) => setImmediate(resolve))
+    expect(execFileSync).toHaveBeenCalledWith(
+      'osascript',
+      expect.arrayContaining(['tell application "System Events" to key up control']),
+      { timeout: 3000 },
+    )
+  })
+
+  it('releases all held keys on dispose', () => {
+    codexAppHarness.dispose?.()
+    expect(execFileSync).toHaveBeenCalledWith(
+      'osascript',
+      expect.arrayContaining([
+        'tell application "System Events" to key up control',
+        'tell application "System Events" to key up shift',
+        'tell application "System Events" to key up "d"',
+      ]),
+      { timeout: 3000 },
     )
   })
 

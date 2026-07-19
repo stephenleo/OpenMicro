@@ -154,7 +154,9 @@ const agent: Pick<AgentPty, 'write' | 'dispose'> = usesPty
       write: (bytes: string) => {
         harness.execute?.(bytes)
       },
-      dispose: () => {},
+      // Exit must never strand synthetic keys held down (dictation chord) —
+      // a stuck Ctrl turns every click into a right-click machine-wide.
+      dispose: () => harness.dispose?.(),
     }
 
 if (!usesPty) {
