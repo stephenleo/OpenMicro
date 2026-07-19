@@ -5,3 +5,5 @@ dist/
 .claude/settings.local.json
 TODO.md
 ANNOUNCEMENT.md
+demo/node_modules/
+demo/qa/
