@@ -223,9 +223,18 @@ export const codexAppHarness: Harness = {
         // once (see README) — Ctrl+Alt on Windows, and no clash with the
         // Ctrl/Cmd +/- zoom chords. Assignments are account-synced with no
         // local store, so openmicro cannot set them at install time.
+        // Discrete modifier key downs, not `using {...}` — the app's shortcut
+        // listener needs real flagsChanged events and ignores the inline form
+        // (verified live; same pattern as the dictation chord).
         return action.delta > 0
-          ? { bytes: 'osascript:key code 24 using {control down, option down}' } // ⌃⌥=
-          : { bytes: 'osascript:key code 27 using {control down, option down}' } // ⌃⌥-
+          ? {
+              bytes:
+                'osascript:key down control\nkey down option\nkey code 24\nkey up option\nkey up control',
+            } // ⌃⌥=
+          : {
+              bytes:
+                'osascript:key down control\nkey down option\nkey code 27\nkey up option\nkey up control',
+            } // ⌃⌥-
       case 'focus_session': {
         // Touchpad: cycle the current project's chats with wrap-around.
         const next = cycleThread(scanDesktopThreads())
