@@ -18,6 +18,8 @@ openmicro codex-app # drive the Codex macOS desktop app
 
 `openmicro codex-app` drives the Codex desktop app instead of a terminal CLI: new chat and prompt prefill use `codex://` deep links (no permission needed), while submit (Enter), reject (Esc), dictation (Ctrl+Shift+D), d-pad arrows, and Ctrl+U send keystrokes and need Accessibility permission for your terminal. A stick-flick prompt prefills the composer; press submit to send it. The app launches automatically and the terminal shows live status (controller, actions, agent state).
 
+The thinking-depth dial (right-stick flicks) needs one-time setup: the app ships "Increase reasoning effort" and "Decrease reasoning effort" shortcuts unassigned, and assignments are account-synced so OpenMicro cannot set them for you. In the Codex app open Settings → Keyboard shortcuts, search "effort", and assign Increase to `⌃⌥=` (Control+Option+`=`, Ctrl+Alt on Windows) and Decrease to `⌃⌥-` — right-stick flicks then step the composer's reasoning effort. These chords avoid the app's Ctrl/Cmd `+`/`-` zoom shortcuts. Note the app's own Decrease shortcut stops one step short of the lowest effort level (also when pressed physically) — use the model picker for that. Optionally also assign "Open model picker" to `⌃⇧M` — right-stick click then opens the picker so you can watch the effort change. Assigned different chords? Remap `thinking_depth` in your OpenMicro config to matching `keys` bindings.
+
 OpenMicro installs its lifecycle hooks automatically. If Codex reports that its hooks changed, open `/hooks` in Codex and trust the OpenMicro hooks.
 
 Controller support depends on the exact device and connection. Check the [controller compatibility guide](CONTROLLERS.md) before you start, or run `openmicro doctor` to test your controller.
@@ -30,21 +32,22 @@ Controller support depends on the exact device and connection. Check the [contro
 
 ### Text control reference
 
-| Control                                         | Action                                                       |
-| ----------------------------------------------- | ------------------------------------------------------------ |
-| south (✕ / A)                                   | Submit or confirm                                            |
-| east (○ / B)                                    | Interrupt or dismiss                                         |
-| north (△ / Y)                                   | Push-to-talk                                                 |
-| west (□ / X)                                    | Start a new chat                                             |
-| d-pad                                           | Navigate TUI menus; repeats while held                       |
-| left stick flick up / down / left / right       | Review PR / debug / refactor / write tests                   |
-| right stick rotate clockwise / counterclockwise | Increase / decrease thinking depth                           |
-| R1                                              | Cycle modes (Shift+Tab)                                      |
-| R2                                              | Clear the input line (Ctrl+U)                                |
-| touchpad click                                  | Focus the next session by default, where supported           |
-| L2                                              | Cycle herdr spaces; touchpad then cycles agents in the space |
+| Control                                   | Action                                                       |
+| ----------------------------------------- | ------------------------------------------------------------ |
+| south (✕ / A)                             | Submit or confirm                                            |
+| east (○ / B)                              | Interrupt or dismiss                                         |
+| north (△ / Y)                             | Push-to-talk                                                 |
+| west (□ / X)                              | Start a new chat                                             |
+| d-pad                                     | Navigate TUI menus; repeats while held                       |
+| left stick flick up / down / left / right | Review PR / debug / refactor / write tests                   |
+| right stick flick right / left            | Increase / decrease thinking depth                           |
+| R1                                        | Cycle modes (Shift+Tab)                                      |
+| R2                                        | Clear the input line (Ctrl+U)                                |
+| right stick click (R3)                    | Open the model picker (Codex app, with shortcut setup)       |
+| touchpad click                            | Focus the next session by default, where supported           |
+| L2                                        | Cycle herdr spaces; touchpad then cycles agents in the space |
 
-Stick flicks fire after returning to center; each quarter-turn steps thinking depth once. Hold L1 with south, east, west, north, d-pad up, or d-pad down to select one of six layers. The first layer ships with these defaults; the other five start empty. Other controls are unbound by default and remappable.
+Stick flicks fire after returning to center. Rotation gestures (`rstick_cw`/`rstick_ccw`, one step per quarter-turn) remain available for remapping. Hold L1 with south, east, west, north, d-pad up, or d-pad down to select one of six layers. The first layer ships with these defaults; the other five start empty. Other controls are unbound by default and remappable.
 
 Voice and thinking-depth support varies by harness; see [OpenMicro feature parity](#openmicro-feature-parity).
 
@@ -52,11 +55,11 @@ Voice and thinking-depth support varies by harness; see [OpenMicro feature parit
 
 Animated demos (rendered, not filmed) of the six core interactions:
 
-|                                                                                                                                            |                                                                                                                                 |
-| :----------------------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------: |
-| ![Lightbar status colors follow the focused session](assets/demo/status-leds.gif)<br>**Status lightbar** — executing, waiting, done, error |  ![Face buttons submit, interrupt, dictate, and start a new chat](assets/demo/command-keys.gif)<br>**Command keys** — ✕ ○ △ □   |
-|        ![Left-stick flick launches a workflow prompt](assets/demo/workflow-flick.gif)<br>**Workflow flick** — stick up = review PR         | ![Right-stick rotation steps thinking depth](assets/demo/thinking-dial.gif)<br>**Thinking dial** — quarter-turns step `/effort` |
-|                 ![L1 plus a face button switches control layers](assets/demo/layers.gif)<br>**Layers** — hold L1 to switch                 |  ![Touchpad click moves focus between sessions](assets/demo/multi-session.gif)<br>**Multi-session** — touchpad switches focus   |
+|                                                                                                                                            |                                                                                                                              |
+| :----------------------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------: |
+| ![Lightbar status colors follow the focused session](assets/demo/status-leds.gif)<br>**Status lightbar** — executing, waiting, done, error | ![Face buttons submit, interrupt, dictate, and start a new chat](assets/demo/command-keys.gif)<br>**Command keys** — ✕ ○ △ □ |
+|        ![Left-stick flick launches a workflow prompt](assets/demo/workflow-flick.gif)<br>**Workflow flick** — stick up = review PR         | ![Right-stick flicks step thinking depth](assets/demo/thinking-dial.gif)<br>**Thinking dial** — stick flicks step `/effort`  |
+|                 ![L1 plus a face button switches control layers](assets/demo/layers.gif)<br>**Layers** — hold L1 to switch                 | ![Touchpad click moves focus between sessions](assets/demo/multi-session.gif)<br>**Multi-session** — touchpad switches focus |
 
 ## What it gives you
 
@@ -104,7 +107,7 @@ OpenMicro creates `~/.openmicro/config.json` on first run. Edit bindings, layer 
       "bindings": {
         "south": { "type": "accept" },
         "lstick_up": { "type": "workflow", "presetId": "review-pr" },
-        "rstick_cw": { "type": "thinking_depth", "delta": 1 }
+        "rstick_right": { "type": "thinking_depth", "delta": 1 }
       }
     },
     { "name": "Layer 2", "color": { "r": 160, "g": 32, "b": 240 }, "bindings": {} },

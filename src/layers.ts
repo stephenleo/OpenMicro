@@ -152,8 +152,14 @@ export const DEFAULT_CONFIG: OpenMicroConfig = {
         lstick_left: { type: 'workflow', presetId: 'refactor' },
         lstick_right: { type: 'workflow', presetId: 'write-tests' },
         l2: { type: 'herdr_space' },
-        rstick_cw: { type: 'thinking_depth', delta: 1 },
-        rstick_ccw: { type: 'thinking_depth', delta: -1 },
+        // Flicks, not cw/ccw rotation — rotation gestures proved finicky to
+        // perform reliably; left/right flicks are still remappable to cw/ccw.
+        rstick_right: { type: 'thinking_depth', delta: 1 },
+        rstick_left: { type: 'thinking_depth', delta: -1 },
+        // Ctrl+Shift+M (CSI-u encoding). In the Codex app this opens the model
+        // picker (user-assigned ^⇧M) so the thinking dial has a visual;
+        // terminal harnesses ignore the sequence.
+        r3: { type: 'keys', bytes: '\x1b[109;6u' },
         touchpad: TOUCHPAD_CYCLE,
       },
     },

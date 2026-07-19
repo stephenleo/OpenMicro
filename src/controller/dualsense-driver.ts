@@ -71,9 +71,12 @@ export class DualSenseDriver extends EventEmitter implements ControllerHAL {
       this.button(c.touchpad.button, 'touchpad')
 
       this.axis(c.left.analog.x, 'left_x')
-      this.axis(c.left.analog.y, 'left_y')
+      // dualsense-ts negates hardware Y (up = +1); re-negate to the project
+      // convention (y positive = down) that the router and other drivers use —
+      // otherwise stick rotation direction and up/down flicks come out swapped.
+      this.axis(c.left.analog.y, 'left_y', true)
       this.axis(c.right.analog.x, 'right_x')
-      this.axis(c.right.analog.y, 'right_y')
+      this.axis(c.right.analog.y, 'right_y', true)
 
       c.left.trigger.on('change', (t: Trigger) => {
         this.emit('data', {
@@ -107,9 +110,13 @@ export class DualSenseDriver extends EventEmitter implements ControllerHAL {
     })
   }
 
-  private axis(input: Axis, id: AxisId): void {
+  private axis(input: Axis, id: AxisId, invert = false): void {
     input.on('change', (a: Axis) => {
-      this.emit('data', { kind: 'axis', axis: id, value: a.state } satisfies ControllerEvent)
+      this.emit('data', {
+        kind: 'axis',
+        axis: id,
+        value: invert ? -a.state : a.state,
+      } satisfies ControllerEvent)
     })
   }
 }

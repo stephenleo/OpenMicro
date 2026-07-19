@@ -173,10 +173,25 @@ describe('codex-app harness', () => {
     expect(codexAppHarness.resolveAction({ type: 'keys', bytes: '\x15' }, ctx)).toEqual({
       bytes: 'osascript:keystroke "a" using command down\nkey code 51',
     })
+    // Ctrl+Shift+M (CSI-u) → the app's user-assigned "Open model picker" chord.
+    expect(codexAppHarness.resolveAction({ type: 'keys', bytes: '\x1b[109;6u' }, ctx)).toEqual({
+      bytes:
+        'osascript:key down control\nkey down shift\nkey code 46\nkey up shift\nkey up control',
+    })
+  })
+
+  it('maps thinking_depth to the user-assigned effort shortcut chords', () => {
+    expect(codexAppHarness.resolveAction({ type: 'thinking_depth', delta: 1 }, ctx)).toEqual({
+      bytes:
+        'osascript:key down control\nkey down option\nkey code 24\nkey up option\nkey up control',
+    })
+    expect(codexAppHarness.resolveAction({ type: 'thinking_depth', delta: -1 }, ctx)).toEqual({
+      bytes:
+        'osascript:key down control\nkey down option\nkey code 27\nkey up option\nkey up control',
+    })
   })
 
   it('returns null for documented gaps and core-only actions', () => {
-    expect(codexAppHarness.resolveAction({ type: 'thinking_depth', delta: 1 }, ctx)).toBeNull()
     expect(codexAppHarness.resolveAction({ type: 'keys', bytes: '\x07' }, ctx)).toBeNull()
     expect(codexAppHarness.resolveAction({ type: 'workflow', presetId: 'x' }, ctx)).toBeNull()
     expect(codexAppHarness.resolveAction({ type: 'layer', index: 1 }, ctx)).toBeNull()
