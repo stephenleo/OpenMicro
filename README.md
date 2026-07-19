@@ -184,6 +184,26 @@ registerHarness(myHarness)
 
 The binary does not load harness plugins from configuration yet, so a third-party registration currently needs a small custom entry point.
 
+## Embed controller input
+
+The `openmicro/controller` API exposes the same controller manager used by the CLI without starting the CLI, installing hooks, creating configuration, opening a PTY, or binding a server.
+
+```ts
+import { HidManager } from 'openmicro/controller'
+import type { ControllerEvent } from 'openmicro/controller'
+
+const controller = new HidManager()
+controller.on('data', (event: ControllerEvent) => {
+  // Handle normalized controller input.
+})
+controller.start()
+
+// Release polling and the active HID device during shutdown.
+controller.stop()
+```
+
+`start()` discovers and verifies a supported device, emits a `connected` event, then emits deduplicated `button` and `axis` state changes. Stick axes use `-1..1`; triggers use `0..1`. A `disconnected` event is followed by automatic reconnect polling. `start()` and `stop()` are idempotent; call `stop()` when the consumer shuts down to release polling and device ownership.
+
 ## Troubleshooting
 
 ### Controller is connected but OpenMicro cannot open it

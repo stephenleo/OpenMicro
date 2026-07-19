@@ -21,6 +21,10 @@
       "types": "./dist/harness/index.d.ts",
       "default": "./dist/harness/index.js"
     },
+    "./controller": {
+      "types": "./dist/controller/index.d.ts",
+      "default": "./dist/controller/index.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [
