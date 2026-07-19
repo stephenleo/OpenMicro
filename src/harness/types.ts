@@ -14,9 +14,9 @@ export type Action =
   | { type: 'thinking_depth'; delta: 1 | -1 }
   | { type: 'workflow'; presetId: string } // core resolves presetId → text via config, then calls resolveAction({type:'prompt', text})
   | { type: 'prompt'; text: string }
-  | { type: 'focus_session'; index: number } // handled by core, never reaches a Harness
+  | { type: 'focus_session'; index: number } // core-handled for pty harnesses; GUI harnesses map it to an in-app equivalent
   | { type: 'layer'; index: number } // handled by core, never reaches a Harness
-  | { type: 'herdr_space' } // cycle herdr workspaces; handled by core, never reaches a Harness
+  | { type: 'herdr_space' } // cycle herdr workspaces; core-handled for pty harnesses, in-app equivalent for GUI ones
   | { type: 'keys'; bytes: string } // raw pty passthrough (e.g. dpad arrows), user-remappable
 
 export interface InstallResult {

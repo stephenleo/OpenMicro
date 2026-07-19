@@ -7,7 +7,7 @@ import { dispatchAction } from '../src/dispatch.js'
 import type { DispatchDeps } from '../src/dispatch.js'
 import { claudeHarness } from '../src/harness/claude.js'
 import { codexHarness } from '../src/harness/codex.js'
-import type { Action } from '../src/harness/types.js'
+import type { Action, Harness } from '../src/harness/types.js'
 import { DEFAULT_CONFIG } from '../src/layers.js'
 
 function makeDeps(overrides: Partial<DispatchDeps> = {}): {
@@ -82,6 +82,24 @@ describe('dispatchAction', () => {
     dispatchAction({ type: 'herdr_space' }, deps)
     expect(herdrCycles).toEqual([1])
     expect(writes).toEqual([]) // never reaches the harness
+  })
+
+  it('routes focus_session and herdr_space to the harness for GUI harnesses', () => {
+    const guiHarness: Harness = {
+      kind: 'gui-stub',
+      command: 'true',
+      usesPty: false,
+      buildArgs: () => [],
+      installHooks: () => ({ changed: false, trustNotice: null }),
+      stateForHookEvent: () => null,
+      resolveAction: (action) => ({ bytes: `gui:${action.type}` }),
+    }
+    const { deps, focus, herdrCycles, writes } = makeDeps({ harness: guiHarness })
+    dispatchAction({ type: 'focus_session', index: -1 }, deps)
+    dispatchAction({ type: 'herdr_space' }, deps)
+    expect(focus).toEqual([]) // core pane cycling is bypassed in GUI mode
+    expect(herdrCycles).toEqual([])
+    expect(writes).toEqual(['gui:focus_session', 'gui:herdr_space'])
   })
 
   it('silently skips a documented harness gap (Codex push-to-talk)', () => {

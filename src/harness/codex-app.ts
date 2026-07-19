@@ -4,6 +4,9 @@
 // System Events keystrokes into the frontmost Codex window.
 
 import { execFile } from 'node:child_process'
+import { createRequire } from 'node:module'
+import os from 'node:os'
+import path from 'node:path'
 import { installCodexHooks } from '../hooks-install.js'
 import { logger } from '../logger.js'
 import { codexHarness } from './codex.js'
@@ -25,6 +28,136 @@ const KEY_EQUIVALENTS: Record<string, string> = {
 
 // Whether the dictation key chord is currently held down (see push_to_talk).
 let dictationHeld = false
+
+// ── Desktop thread/project cycling ──────────────────────────────────────────
+// The app has Next/Previous Chat shortcuts but they stop at the list ends and
+// there is no project-switch shortcut at all. Instead, read the app's thread
+// catalog from the shared ~/.codex/state_5.sqlite (archived=0, non-subagent —
+// verified to match the sidebar's per-project chat lists exactly) and jump
+// directly via the app's copyDeeplink format (codex://threads/<id>) —
+// wrap-around for free.
+
+export interface DesktopThread {
+  id: string
+  cwd: string
+  /** Last-activity ms (the app's recency column) — orders projects, not threads. */
+  mtime: number
+}
+
+/** Touchpad/LT cursor into the desktop thread list. */
+export interface DesktopCursor {
+  threadId: string | null
+  cwd: string | null
+}
+
+// ponytail: best-effort cursor. Threads the user opens by clicking in the app
+// go unseen here, so the next press resumes from the last controller pick.
+const cursor: DesktopCursor = { threadId: null, cwd: null }
+
+/**
+ * List the desktop app's visible threads from its thread catalog db.
+ *
+ * Args:
+ *     dbPath (string): Path to the catalog. Defaults to ~/.codex/state_5.sqlite.
+ *
+ * Returns:
+ *     DesktopThread[]: Non-archived, non-subagent threads, newest-created first (stable UUIDv7 order).
+ */
+export function scanDesktopThreads(
+  dbPath: string = path.join(os.homedir(), '.codex', 'state_5.sqlite'),
+): DesktopThread[] {
+  try {
+    // Lazy-require: node:sqlite is flagless only on Node 23.4+. On older
+    // runtimes this throws and thread/project cycling degrades to a no-op.
+    const { DatabaseSync } = createRequire(import.meta.url)('node:sqlite') as {
+      DatabaseSync: new (
+        path: string,
+        options: { readOnly: boolean },
+      ) => {
+        prepare(sql: string): { all(): unknown[] }
+        close(): void
+      }
+    }
+    const db = new DatabaseSync(dbPath, { readOnly: true })
+    try {
+      // id is UUIDv7 (creation-ordered) — a stable sort key, unlike recency,
+      // which our own deep-link opens would reshuffle mid-cycle.
+      const rows = db
+        .prepare(
+          `SELECT id, cwd, COALESCE(recency_at_ms, updated_at * 1000) AS recency
+           FROM threads
+           WHERE archived = 0 AND source NOT LIKE '{%'
+           ORDER BY id DESC`,
+        )
+        .all() as { id: string; cwd: string; recency: number }[]
+      return rows.map((r) => ({ id: r.id, cwd: r.cwd, mtime: r.recency }))
+    } finally {
+      db.close()
+    }
+  } catch {
+    return []
+  }
+}
+
+/**
+ * Advance the cursor to the next thread within the current project (wrapping).
+ *
+ * Args:
+ *     threads (DesktopThread[]): Threads newest-first from scanDesktopThreads.
+ *     cur (DesktopCursor): Cursor to advance. Defaults to the module cursor.
+ *
+ * Returns:
+ *     DesktopThread | null: The thread to open, or null when there are none.
+ */
+export function cycleThread(
+  threads: DesktopThread[],
+  cur: DesktopCursor = cursor,
+): DesktopThread | null {
+  if (threads.length === 0) return null
+  const cwd = cur.cwd ?? threads[0]!.cwd
+  const scoped = threads.filter((t) => t.cwd === cwd)
+  const list = scoped.length > 0 ? scoped : threads
+  const index = list.findIndex((t) => t.id === cur.threadId)
+  const next = list[(index + 1) % list.length]!
+  cur.threadId = next.id
+  cur.cwd = next.cwd
+  return next
+}
+
+/**
+ * Advance the cursor to the next project's most recent thread (wrapping).
+ *
+ * Args:
+ *     threads (DesktopThread[]): Threads newest-first from scanDesktopThreads.
+ *     cur (DesktopCursor): Cursor to advance. Defaults to the module cursor.
+ *
+ * Returns:
+ *     DesktopThread | null: The thread to open, or null when there are none.
+ */
+export function cycleProject(
+  threads: DesktopThread[],
+  cur: DesktopCursor = cursor,
+): DesktopThread | null {
+  if (threads.length === 0) return null
+  // Projects ordered by last activity, most recent first: active projects sit
+  // 1-2 presses apart, stale ones trail at the end of the ring and age out as
+  // usage shifts. ponytail: the app's sidebar project list is account-synced
+  // and unreadable locally, so rarely-used projects with visible chats still
+  // appear late in the cycle.
+  const latest = new Map<string, number>()
+  for (const t of threads) {
+    if (t.mtime > (latest.get(t.cwd) ?? -1)) latest.set(t.cwd, t.mtime)
+  }
+  const cwds = [...latest.keys()].sort((a, b) => latest.get(b)! - latest.get(a)!)
+  // No cursor yet: assume the user sits in the first (most active) project so
+  // the first press visibly switches away from it.
+  const index = cur.cwd === null ? 0 : cwds.indexOf(cur.cwd)
+  const nextCwd = cwds[(index + 1) % cwds.length]!
+  const next = threads.find((t) => t.cwd === nextCwd)!
+  cur.threadId = next.id
+  cur.cwd = next.cwd
+  return next
+}
 
 export const codexAppHarness: Harness = {
   kind: 'codex-app',
@@ -74,7 +207,10 @@ export const codexAppHarness: Harness = {
           ? { bytes: 'osascript:key down control\nkey down shift\nkey down "d"' }
           : { bytes: 'osascript:key up "d"\nkey up shift\nkey up control' }
       case 'new_chat':
-        return { bytes: 'open:codex://new' }
+        // codex://threads/new, not codex://new — the app's deep-link parser
+        // drops a bare codex://new (it requires a prompt/path/originUrl query
+        // param); only the threads/new form falls back to a plain new thread.
+        return { bytes: 'open:codex://threads/new' }
       case 'prompt':
         // Deep link prefills the composer but does NOT auto-send — the user
         // follows with accept.
@@ -83,12 +219,22 @@ export const codexAppHarness: Harness = {
         return { bytes: 'osascript:key code 53' } // Esc — stop generation / dismiss
       case 'thinking_depth':
         return null // documented gap: no reasoning-effort control in the app
+      case 'focus_session': {
+        // Touchpad: cycle the current project's chats with wrap-around.
+        const next = cycleThread(scanDesktopThreads())
+        return next ? { bytes: `open:codex://threads/${next.id}` } : null
+      }
+      case 'herdr_space': {
+        // LT: jump to the next project's most recent chat (wrapping).
+        const next = cycleProject(scanDesktopThreads())
+        return next ? { bytes: `open:codex://threads/${next.id}` } : null
+      }
       case 'keys': {
         const equivalent = KEY_EQUIVALENTS[action.bytes]
         return equivalent ? { bytes: `osascript:${equivalent}` } : null
       }
       default:
-        return null // workflow/focus_session/layer never reach a harness
+        return null // workflow/layer never reach a harness
     }
   },
 

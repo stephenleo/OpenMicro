@@ -3,9 +3,18 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const execFile = vi.hoisted(() => vi.fn())
 vi.mock('node:child_process', () => ({ execFile }))
 
+import fs from 'node:fs'
+import { createRequire } from 'node:module'
+import os from 'node:os'
+import path from 'node:path'
 import { claudeHarness } from '../src/harness/claude.js'
 import { codexHarness } from '../src/harness/codex.js'
-import { codexAppHarness } from '../src/harness/codex-app.js'
+import {
+  codexAppHarness,
+  cycleProject,
+  cycleThread,
+  scanDesktopThreads,
+} from '../src/harness/codex-app.js'
 import { harnessFor, registerHarness } from '../src/harness/index.js'
 import type { Harness } from '../src/harness/types.js'
 
@@ -144,7 +153,7 @@ describe('codex-app harness', () => {
       bytes: 'osascript:key up "d"\nkey up shift\nkey up control',
     })
     expect(codexAppHarness.resolveAction({ type: 'new_chat' }, ctx)).toEqual({
-      bytes: 'open:codex://new',
+      bytes: 'open:codex://threads/new',
     })
   })
 
@@ -170,8 +179,68 @@ describe('codex-app harness', () => {
     expect(codexAppHarness.resolveAction({ type: 'thinking_depth', delta: 1 }, ctx)).toBeNull()
     expect(codexAppHarness.resolveAction({ type: 'keys', bytes: '\x07' }, ctx)).toBeNull()
     expect(codexAppHarness.resolveAction({ type: 'workflow', presetId: 'x' }, ctx)).toBeNull()
-    expect(codexAppHarness.resolveAction({ type: 'focus_session', index: 0 }, ctx)).toBeNull()
     expect(codexAppHarness.resolveAction({ type: 'layer', index: 1 }, ctx)).toBeNull()
+  })
+
+  it('scans visible threads from the catalog db in stable id order', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'om-state-'))
+    const dbPath = path.join(dir, 'state.sqlite')
+    const { DatabaseSync } = createRequire(import.meta.url)('node:sqlite') as {
+      DatabaseSync: new (path: string) => {
+        exec(sql: string): void
+        close(): void
+      }
+    }
+    const db = new DatabaseSync(dbPath)
+    db.exec(`CREATE TABLE threads (
+      id TEXT PRIMARY KEY, cwd TEXT, source TEXT, archived INTEGER,
+      updated_at INTEGER, recency_at_ms INTEGER
+    );
+    INSERT INTO threads VALUES
+      ('a', '/p1', 'cli', 0, 1, 1000),
+      ('b', '/p2', 'vscode', 0, 2, 2000),
+      ('c', '/p1', 'cli', 1, 3, 3000),
+      ('d', '/p1', '{"subagent":"review"}', 0, 4, 4000),
+      ('e', '/p1', 'cli', 0, 5, NULL);`)
+    db.close()
+    const threads = scanDesktopThreads(dbPath)
+    expect(threads.map((t) => t.id)).toEqual(['e', 'b', 'a']) // archived + subagent excluded
+    expect(threads.find((t) => t.id === 'e')?.mtime).toBe(5000) // recency falls back to updated_at
+    expect(scanDesktopThreads(path.join(dir, 'missing.sqlite'))).toEqual([])
+    fs.rmSync(dir, { recursive: true, force: true })
+  })
+
+  it('cycles threads within a project with wrap-around', () => {
+    const threads = [
+      { id: 't3', cwd: '/p1', mtime: 3 },
+      { id: 'other', cwd: '/p2', mtime: 2 },
+      { id: 't1', cwd: '/p1', mtime: 1 },
+    ]
+    const cur = { threadId: null, cwd: null }
+    expect(cycleThread(threads, cur)?.id).toBe('t3') // nothing selected yet — start at newest
+    expect(cycleThread(threads, cur)?.id).toBe('t1')
+    expect(cycleThread(threads, cur)?.id).toBe('t3') // wraps, never leaves /p1
+  })
+
+  it('cycles projects by recency with wrap-around, landing on the newest thread', () => {
+    const threads = [
+      { id: 'a2', cwd: '/pa', mtime: 4 },
+      { id: 'b1', cwd: '/pb', mtime: 3 },
+      { id: 'a1', cwd: '/pa', mtime: 2 },
+    ]
+    const cur = { threadId: null, cwd: null }
+    expect(cycleProject(threads, cur)?.id).toBe('b1') // cold start: switch away from most-active /pa
+    expect(cycleProject(threads, cur)?.id).toBe('a2') // wraps back to /pa's newest
+    expect(cur).toEqual({ threadId: 'a2', cwd: '/pa' })
+  })
+
+  it('returns to the most active project when the cursor sits on an unknown cwd', () => {
+    const threads = [
+      { id: 'a1', cwd: '/pa', mtime: 3 },
+      { id: 'b1', cwd: '/pb', mtime: 2 },
+    ]
+    const cur = { threadId: 'x', cwd: '/gone' }
+    expect(cycleProject(threads, cur)?.cwd).toBe('/pa')
   })
 
   it('delegates hook-event mapping to the codex harness', () => {

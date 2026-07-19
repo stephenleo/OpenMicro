@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.0.2] - 2026-07-19
+
+### Fixed
+
+- **Codex app: touchpad now cycles chats within the current project, with wrap-around.** `focus_session` and `herdr_space` previously never reached GUI harnesses (they were core-only pane/workspace actions), so touchpad and LT did nothing in the app. Touchpad now jumps between the current project's visible chats via `codex://threads/<id>` deep links, in stable creation order, wrapping past the end — the app's own Next/Previous Chat shortcuts stop at the list edges.
+- **Codex app: LT now cycles projects.** The app has no project-switch shortcut at all; LT jumps to the next project's most recent chat, projects ordered most-recently-used first. Chats and projects are read from the app's own thread catalog (`~/.codex/state_5.sqlite`, non-archived, non-subagent — matches the sidebar exactly). Ordering caveats tracked in [#59](https://github.com/stephenleo/OpenMicro/issues/59). Requires Node ≥ 23.4 (`node:sqlite`); older runtimes degrade to a no-op.
+- **Codex app: square now starts a new chat.** The app's deep-link parser silently drops a bare `codex://new` (it requires a `prompt`/`path`/`originUrl` query param); `new_chat` now uses `codex://threads/new`, the only form that falls back to a plain new thread.
+
 ## [1.0.1] - 2026-07-18
 
 ### Fixed
