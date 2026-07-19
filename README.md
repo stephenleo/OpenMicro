@@ -48,6 +48,16 @@ Stick flicks fire after returning to center; each quarter-turn steps thinking de
 
 Voice and thinking-depth support varies by harness; see [OpenMicro feature parity](#openmicro-feature-parity).
 
+## See it in action
+
+Animated demos (rendered, not filmed) of the six core interactions:
+
+|                                                                                                                                            |                                                                                                                                 |
+| :----------------------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------: |
+| ![Lightbar status colors follow the focused session](assets/demo/status-leds.gif)<br>**Status lightbar** — executing, waiting, done, error |  ![Face buttons submit, interrupt, dictate, and start a new chat](assets/demo/command-keys.gif)<br>**Command keys** — ✕ ○ △ □   |
+|        ![Left-stick flick launches a workflow prompt](assets/demo/workflow-flick.gif)<br>**Workflow flick** — stick up = review PR         | ![Right-stick rotation steps thinking depth](assets/demo/thinking-dial.gif)<br>**Thinking dial** — quarter-turns step `/effort` |
+|                 ![L1 plus a face button switches control layers](assets/demo/layers.gif)<br>**Layers** — hold L1 to switch                 |  ![Touchpad click moves focus between sessions](assets/demo/multi-session.gif)<br>**Multi-session** — touchpad switches focus   |
+
 ## What it gives you
 
 - Respond to agents without hunting through terminal tabs.

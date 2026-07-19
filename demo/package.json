@@ -1,0 +1,19 @@
+{
+  "name": "open-micro-demo",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "studio": "remotion studio",
+    "render": "remotion render StatusLeds ../assets/demo/status-leds.gif --codec=gif --every-nth-frame=2 && remotion render CommandKeys ../assets/demo/command-keys.gif --codec=gif --every-nth-frame=2 && remotion render WorkflowFlick ../assets/demo/workflow-flick.gif --codec=gif --every-nth-frame=2 && remotion render ThinkingDial ../assets/demo/thinking-dial.gif --codec=gif --every-nth-frame=2 && remotion render Layers ../assets/demo/layers.gif --codec=gif --every-nth-frame=2 && remotion render MultiSession ../assets/demo/multi-session.gif --codec=gif --every-nth-frame=2"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "remotion": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3"
+  }
+}
