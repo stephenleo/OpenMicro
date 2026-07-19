@@ -24,6 +24,10 @@ const KEY_EQUIVALENTS: Record<string, string> = {
   // Clear the input line. Electron text boxes ignore Cocoa's Ctrl+U kill-line,
   // so select-all + delete (newline = sequential System Events statements).
   '\x15': 'keystroke "a" using command down\nkey code 51',
+  // Ctrl+Shift+M (CSI-u) → the app's "Open model picker" shortcut, which users
+  // assign to ^⇧M (see README). Discrete modifier key downs — the app's
+  // shortcut listener ignores the inline `using {...}` form.
+  '\x1b[109;6u': 'key down control\nkey down shift\nkey code 46\nkey up shift\nkey up control',
 }
 
 // Whether the dictation key chord is currently held down (see push_to_talk).

@@ -173,6 +173,11 @@ describe('codex-app harness', () => {
     expect(codexAppHarness.resolveAction({ type: 'keys', bytes: '\x15' }, ctx)).toEqual({
       bytes: 'osascript:keystroke "a" using command down\nkey code 51',
     })
+    // Ctrl+Shift+M (CSI-u) → the app's user-assigned "Open model picker" chord.
+    expect(codexAppHarness.resolveAction({ type: 'keys', bytes: '\x1b[109;6u' }, ctx)).toEqual({
+      bytes:
+        'osascript:key down control\nkey down shift\nkey code 46\nkey up shift\nkey up control',
+    })
   })
 
   it('maps thinking_depth to the user-assigned effort shortcut chords', () => {

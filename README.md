@@ -18,7 +18,7 @@ openmicro codex-app # drive the Codex macOS desktop app
 
 `openmicro codex-app` drives the Codex desktop app instead of a terminal CLI: new chat and prompt prefill use `codex://` deep links (no permission needed), while submit (Enter), reject (Esc), dictation (Ctrl+Shift+D), d-pad arrows, and Ctrl+U send keystrokes and need Accessibility permission for your terminal. A stick-flick prompt prefills the composer; press submit to send it. The app launches automatically and the terminal shows live status (controller, actions, agent state).
 
-The thinking-depth dial (right-stick rotation) needs one-time setup: the app ships "Increase reasoning effort" and "Decrease reasoning effort" shortcuts unassigned, and assignments are account-synced so OpenMicro cannot set them for you. In the Codex app open Settings → Keyboard shortcuts, search "effort", and assign Increase to `⌃⌥=` (Control+Option+`=`, Ctrl+Alt on Windows) and Decrease to `⌃⌥-` — right-stick quarter-turns then step the composer's reasoning effort. These chords avoid the app's Ctrl/Cmd `+`/`-` zoom shortcuts. Assigned different chords? Remap `thinking_depth` in your OpenMicro config to matching `keys` bindings.
+The thinking-depth dial (right-stick rotation) needs one-time setup: the app ships "Increase reasoning effort" and "Decrease reasoning effort" shortcuts unassigned, and assignments are account-synced so OpenMicro cannot set them for you. In the Codex app open Settings → Keyboard shortcuts, search "effort", and assign Increase to `⌃⌥=` (Control+Option+`=`, Ctrl+Alt on Windows) and Decrease to `⌃⌥-` — right-stick quarter-turns then step the composer's reasoning effort. These chords avoid the app's Ctrl/Cmd `+`/`-` zoom shortcuts. Optionally also assign "Open model picker" to `⌃⇧M` — right-stick click then opens the picker so you can watch the effort change. Assigned different chords? Remap `thinking_depth` in your OpenMicro config to matching `keys` bindings.
 
 OpenMicro installs its lifecycle hooks automatically. If Codex reports that its hooks changed, open `/hooks` in Codex and trust the OpenMicro hooks.
 
@@ -43,6 +43,7 @@ Controller support depends on the exact device and connection. Check the [contro
 | right stick rotate clockwise / counterclockwise | Increase / decrease thinking depth                           |
 | R1                                              | Cycle modes (Shift+Tab)                                      |
 | R2                                              | Clear the input line (Ctrl+U)                                |
+| right stick click (R3)                          | Open the model picker (Codex app, with shortcut setup)       |
 | touchpad click                                  | Focus the next session by default, where supported           |
 | L2                                              | Cycle herdr spaces; touchpad then cycles agents in the space |
 
