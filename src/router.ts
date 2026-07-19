@@ -176,6 +176,9 @@ export class LayerRouter {
   /** Fires after a layer switch actually changes the current layer. */
   onLayerChange: ((index: number) => void) | null
 
+  /** ControlId of the binding matched by the most recent route() that returned an Action — lets the cli log the physical control (a stick gesture id is otherwise invisible to it). */
+  lastControl: ControlId | null = null
+
   constructor(
     private readonly config: OpenMicroConfig,
     options: RouterOptions = {},
@@ -210,7 +213,9 @@ export class LayerRouter {
   }
 
   private lookup(id: ControlId): Action | null {
-    return this.config.layers[this.layer]?.bindings[id] ?? null
+    const action = this.config.layers[this.layer]?.bindings[id] ?? null
+    if (action) this.lastControl = id
+    return action
   }
 
   private routeButton(button: ButtonId, pressed: boolean): Action | null {

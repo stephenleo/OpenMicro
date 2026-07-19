@@ -3,7 +3,7 @@
 // resolve to tagged strings that execute() turns into `open` deep links or
 // System Events keystrokes into the frontmost Codex window.
 
-import { execFile } from 'node:child_process'
+import { execFile, execFileSync } from 'node:child_process'
 import { createRequire } from 'node:module'
 import os from 'node:os'
 import path from 'node:path'
@@ -30,8 +30,59 @@ const KEY_EQUIVALENTS: Record<string, string> = {
   '\x1b[109;6u': 'key down control\nkey down shift\nkey code 46\nkey up shift\nkey up control',
 }
 
-// Whether the dictation key chord is currently held down (see push_to_talk).
-let dictationHeld = false
+// Synthetic `key down` events are system-wide: a chord whose `key up` never
+// lands (osascript error/timeout, process death, interleaved chords) leaves
+// modifiers stuck for the whole machine — Ctrl turns clicks into right-clicks
+// until the user reboots. Every key this harness ever holds down is listed
+// here; `key up` on an already-up key is a no-op, so releasing all is safe.
+const RELEASE_ALL: string[] = [
+  'key up control',
+  'key up option',
+  'key up shift',
+  'key up command',
+  'key up "d"',
+]
+
+// Chords must run strictly one at a time — two concurrent osascripts can
+// interleave their key down/up steps and strand a modifier. execFile timeout
+// bounds a hung osascript so the queue always drains.
+let osascriptQueue: Promise<void> = Promise.resolve()
+function enqueueOsascript(
+  args: string[],
+  done: (err: Error | null, stderr?: string) => void,
+): void {
+  osascriptQueue = osascriptQueue.then(
+    () =>
+      new Promise<void>((resolve) => {
+        execFile('osascript', args, { timeout: 5000 }, (err, _stdout, stderr) => {
+          done(err, stderr)
+          resolve()
+        })
+      }),
+  )
+}
+
+/**
+ * Synchronously release every key this harness can hold down.
+ *
+ * Args:
+ *     None.
+ *
+ * Returns:
+ *     None.
+ */
+function releaseAllKeys(): void {
+  try {
+    execFileSync(
+      'osascript',
+      RELEASE_ALL.flatMap((step) => ['-e', `tell application "System Events" to ${step}`]),
+      { timeout: 3000 },
+    )
+  } catch {
+    // Best-effort: no Accessibility permission (nothing was ever held) or a
+    // hung System Events — nothing more we can do from here.
+  }
+}
 
 // ── Desktop thread/project cycling ──────────────────────────────────────────
 // The app has Next/Previous Chat shortcuts but they stop at the list ends and
@@ -198,18 +249,13 @@ export const codexAppHarness: Harness = {
         return { bytes: 'osascript:keystroke return' }
       case 'push_to_talk':
         // Ctrl+Shift+D = the app's composer.startDictation binding, and it is
-        // hold-to-dictate: dictation runs only while the keys stay down, so an
-        // instantaneous press+release starts and stops it in the same moment.
-        // Emulate the hold — first press holds the keys down, second press
-        // releases them (verified live: mic engages while held, transcript
-        // inserts on release).
-        // ponytail: module state; if the process dies mid-hold the keys stay
-        // down until the user taps them physically. Upgrade path: plumb
-        // controller press/release through dispatch for true push-to-talk.
-        dictationHeld = !dictationHeld
-        return dictationHeld
-          ? { bytes: 'osascript:key down control\nkey down shift\nkey down "d"' }
-          : { bytes: 'osascript:key up "d"\nkey up shift\nkey up control' }
+        // hold-to-dictate: mic engages while the keys stay down, transcript
+        // inserts on release. The cli forwards the controller edge in
+        // action.pressed — button down holds the chord, button up releases it
+        // — so dictation runs exactly while the button is held.
+        return action.pressed === false
+          ? { bytes: 'osascript:key up "d"\nkey up shift\nkey up control' }
+          : { bytes: 'osascript:key down control\nkey down shift\nkey down "d"' }
       case 'new_chat':
         // codex://threads/new, not codex://new — the app's deep-link parser
         // drops a bare codex://new (it requires a prompt/path/originUrl query
@@ -284,11 +330,20 @@ export const codexAppHarness: Harness = {
         .flatMap((step) => ['-e', `tell application "System Events" to ${step}`])
       // The short delay lets activation land before the keystroke — without it
       // a keypress sent while Codex is still coming frontmost is dropped.
-      execFile(
-        'osascript',
+      enqueueOsascript(
         ['-e', 'tell application "Codex" to activate', '-e', 'delay 0.15', ...steps],
-        (err, _stdout, stderr) => report(err, stderr),
+        (err, stderr) => {
+          report(err, stderr)
+          // A failed/timed-out chord may have landed its `key down` steps but
+          // not the matching `key up` — release everything rather than leave
+          // the whole machine with a stuck modifier.
+          if (err && payload.includes('key down')) releaseAllKeys()
+        },
       )
     }
+  },
+
+  dispose(): void {
+    releaseAllKeys()
   },
 }

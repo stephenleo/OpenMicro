@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.2.0] - 2026-07-19
+
+### Added
+
+- **Human-readable action logs for GUI harnesses.** Every routed press logs the physical control and its action — `△ → push-to-talk`, `right stick flick right → thinking depth up`, `R3 → send ctrl+shift+m` — replacing the raw osascript payload dump. Face buttons show PlayStation glyphs (`✕ ○ □ △`) on DualSense/DS4 and A/B/X/Y on Xbox/GameSir; the session-cycle button shows `▭` (DualSense touchpad) or `⌂` (Guide/home).
+
+### Changed
+
+- **Codex app: dictation is now true hold-to-talk.** Hold `△` to dictate, release to insert the transcript — replacing the press-once-to-start / press-again-to-stop toggle, whose internal state could desync and leave the chord held.
+
+### Fixed
+
+- **Codex app: synthetic keystrokes could leave modifiers stuck machine-wide** (Ctrl stuck → left click acts as right click, keyboard unusable until reboot). osascript chords now run strictly serialized with a timeout, a failed key-down chord immediately releases every key the harness can hold, and quitting OpenMicro (Ctrl+C/SIGTERM) releases all held keys instead of doing nothing.
+
 ## [1.1.0] - 2026-07-19
 
 ### Added
