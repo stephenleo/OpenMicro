@@ -218,7 +218,13 @@ export const codexAppHarness: Harness = {
       case 'reject':
         return { bytes: 'osascript:key code 53' } // Esc — stop generation / dismiss
       case 'thinking_depth':
-        return null // documented gap: no reasoning-effort control in the app
+        // The app ships unassigned "Increase/Decrease reasoning effort"
+        // shortcuts (Settings → Keyboard shortcuts). Users assign ⌃⌥= and ⌃⌥-
+        // once (see README); assignments are account-synced with no local
+        // store, so openmicro cannot set them at install time.
+        return action.delta > 0
+          ? { bytes: 'osascript:key code 24 using {control down, option down}' } // ⌃⌥=
+          : { bytes: 'osascript:key code 27 using {control down, option down}' } // ⌃⌥-
       case 'focus_session': {
         // Touchpad: cycle the current project's chats with wrap-around.
         const next = cycleThread(scanDesktopThreads())

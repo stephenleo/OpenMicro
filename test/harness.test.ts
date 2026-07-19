@@ -175,8 +175,16 @@ describe('codex-app harness', () => {
     })
   })
 
+  it('maps thinking_depth to the user-assigned effort shortcut chords', () => {
+    expect(codexAppHarness.resolveAction({ type: 'thinking_depth', delta: 1 }, ctx)).toEqual({
+      bytes: 'osascript:key code 24 using {control down, option down}',
+    })
+    expect(codexAppHarness.resolveAction({ type: 'thinking_depth', delta: -1 }, ctx)).toEqual({
+      bytes: 'osascript:key code 27 using {control down, option down}',
+    })
+  })
+
   it('returns null for documented gaps and core-only actions', () => {
-    expect(codexAppHarness.resolveAction({ type: 'thinking_depth', delta: 1 }, ctx)).toBeNull()
     expect(codexAppHarness.resolveAction({ type: 'keys', bytes: '\x07' }, ctx)).toBeNull()
     expect(codexAppHarness.resolveAction({ type: 'workflow', presetId: 'x' }, ctx)).toBeNull()
     expect(codexAppHarness.resolveAction({ type: 'layer', index: 1 }, ctx)).toBeNull()
