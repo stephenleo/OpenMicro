@@ -207,7 +207,10 @@ export const codexAppHarness: Harness = {
           ? { bytes: 'osascript:key down control\nkey down shift\nkey down "d"' }
           : { bytes: 'osascript:key up "d"\nkey up shift\nkey up control' }
       case 'new_chat':
-        return { bytes: 'open:codex://new' }
+        // codex://threads/new, not codex://new — the app's deep-link parser
+        // drops a bare codex://new (it requires a prompt/path/originUrl query
+        // param); only the threads/new form falls back to a plain new thread.
+        return { bytes: 'open:codex://threads/new' }
       case 'prompt':
         // Deep link prefills the composer but does NOT auto-send — the user
         // follows with accept.

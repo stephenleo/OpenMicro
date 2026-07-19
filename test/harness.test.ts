@@ -153,7 +153,7 @@ describe('codex-app harness', () => {
       bytes: 'osascript:key up "d"\nkey up shift\nkey up control',
     })
     expect(codexAppHarness.resolveAction({ type: 'new_chat' }, ctx)).toEqual({
-      bytes: 'open:codex://new',
+      bytes: 'open:codex://threads/new',
     })
   })
 
