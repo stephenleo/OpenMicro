@@ -22,7 +22,7 @@ type Props = {
 }
 
 const HL_DEFAULT = '#4da3ff'
-const SHELL_EDGE = '#a9adbb'
+const SHELL_EDGE = '#41434e'
 const GLYPH = { triangle: '#35a15b', circle: '#d6605e', cross: '#7387d6', square: '#cf87b6' }
 
 const hlColor = (v: string | boolean | undefined): string | null =>
@@ -48,9 +48,9 @@ const FaceButton: React.FC<{
         cx={cx}
         cy={cy}
         r={r}
-        fill="#eceef4"
-        stroke={c ?? SHELL_EDGE}
-        strokeWidth={c ? 2.5 : 1.4}
+        fill={c ? '#2a3a52' : '#22242c'}
+        stroke={c ?? '#3a3d48'}
+        strokeWidth={c ? 2.5 : 1.6}
       />
       {shape === 'cross' && (
         <g stroke={glyph} strokeWidth={2.6} strokeLinecap="round">
@@ -114,8 +114,8 @@ const Shoulder: React.FC<{
         width={w}
         height={h}
         rx={h / 2}
-        fill="#d4d7df"
-        stroke={c ?? SHELL_EDGE}
+        fill={c ? '#2a3a52' : '#23252d'}
+        stroke={c ?? '#3a3d48'}
         strokeWidth={1.4}
       />
       <text
@@ -124,7 +124,7 @@ const Shoulder: React.FC<{
         textAnchor="middle"
         fontSize={9}
         fontWeight={700}
-        fill={c ? '#1c2740' : '#5a5e6b'}
+        fill={c ? '#cfe0ff' : '#9aa0ae'}
         fontFamily="ui-sans-serif, sans-serif"
       >
         {label}
@@ -139,22 +139,22 @@ const Stick: React.FC<{ cx: number; cy: number; v: Vec2 }> = ({ cx, cy, v }) => 
   return (
     <g>
       {/* recessed well */}
-      <circle cx={cx} cy={cy} r={31} fill="#b6bac6" />
-      <circle cx={cx} cy={cy} r={28.5} fill="#3a3c44" />
-      {/* black cap with textured rim */}
-      <circle cx={cx + dx} cy={cy + dy} r={22} fill="#17181c" />
+      <circle cx={cx} cy={cy} r={31} fill="#191a20" />
+      <circle cx={cx} cy={cy} r={28.5} fill="#101116" />
+      {/* dark cap with textured rim */}
+      <circle cx={cx + dx} cy={cy + dy} r={22} fill="#2b2d36" />
       <circle
         cx={cx + dx}
         cy={cy + dy}
         r={19.5}
         fill="none"
-        stroke="#33353d"
+        stroke="#4a4d5a"
         strokeWidth={2.4}
         strokeDasharray="2.2 2.6"
       />
       {/* concave top */}
-      <circle cx={cx + dx} cy={cy + dy} r={14} fill="#232429" />
-      <ellipse cx={cx + dx - 3} cy={cy + dy - 4} rx={8} ry={5.5} fill="#2d2f36" />
+      <circle cx={cx + dx} cy={cy + dy} r={14} fill="#35373f" />
+      <ellipse cx={cx + dx - 3} cy={cy + dy - 4} rx={8} ry={5.5} fill="#3d404a" />
     </g>
   )
 }
@@ -171,9 +171,6 @@ export const DualSense: React.FC<Props> = ({
 }) => {
   const tp = hlColor(highlight.touchpad)
   const ledOn = (i: number) => (playerLeds & (1 << i)) !== 0
-  // lightbar strips hugging the touchpad's left/right edges, curving down toward the shell
-  const lbLeft = 'M 174 65 C 162 77, 158 99, 166 120 C 169 127, 173 132, 179 135'
-  const lbRight = 'M 306 65 C 318 77, 322 99, 314 120 C 311 127, 307 132, 301 135'
   return (
     <svg width={width} viewBox="0 0 480 320" style={{ display: 'block' }}>
       <defs>
@@ -191,13 +188,13 @@ export const DualSense: React.FC<Props> = ({
           y2="310"
           gradientUnits="userSpaceOnUse"
         >
-          <stop offset="0" stopColor="#e6e8ef" />
-          <stop offset="0.55" stopColor="#d3d6e0" />
-          <stop offset="1" stopColor="#bcc0cd" />
+          <stop offset="0" stopColor="#2e3039" />
+          <stop offset="0.55" stopColor="#262830" />
+          <stop offset="1" stopColor="#1e2027" />
         </linearGradient>
         <radialGradient id="tpGrad" cx="0.5" cy="0.3" r="1">
-          <stop offset="0" stopColor="#ccd0da" />
-          <stop offset="1" stopColor="#b4b8c5" />
+          <stop offset="0" stopColor="#292b33" />
+          <stop offset="1" stopColor="#22242b" />
         </radialGradient>
       </defs>
 
@@ -231,86 +228,90 @@ export const DualSense: React.FC<Props> = ({
              C 378 74, 358 66, 330 60
              C 306 55, 274 52, 240 52 Z"
           fill="url(#shellGrad)"
+          stroke={SHELL_EDGE}
+          strokeWidth={2}
         />
       </g>
 
-      {/* touchpad, large and centered-top */}
-      {tp && <rect x={164} y={56} width={152} height={78} rx={22} fill={tp} opacity={0.4} />}
+      {/* lightbar: single horizontal strip along the top of the shell */}
       <rect
-        x={170}
-        y={62}
-        width={140}
-        height={62}
-        rx={17}
-        fill="url(#tpGrad)"
-        stroke={tp ?? SHELL_EDGE}
-        strokeWidth={tp ? 2.5 : 1.3}
+        x={168}
+        y={59}
+        width={144}
+        height={9}
+        rx={4.5}
+        fill={lightbar}
+        filter="url(#lbglow)"
+        opacity={glow}
+      />
+      <rect
+        x={168}
+        y={59}
+        width={144}
+        height={9}
+        rx={4.5}
+        fill={lightbar}
+        stroke="#00000055"
+        strokeWidth={1}
       />
 
-      {/* lightbar: two curved strips wrapping the touchpad edges */}
-      <path
-        d={lbLeft}
-        fill="none"
-        stroke={lightbar}
-        strokeWidth={11}
-        strokeLinecap="round"
-        filter="url(#lbglow)"
-        opacity={glow}
+      {/* touchpad below the lightbar */}
+      {tp && <rect x={164} y={66} width={152} height={64} rx={18} fill={tp} opacity={0.4} />}
+      <rect
+        x={170}
+        y={72}
+        width={140}
+        height={52}
+        rx={14}
+        fill="url(#tpGrad)"
+        stroke={tp ?? '#3a3d48'}
+        strokeWidth={tp ? 2.5 : 1.4}
       />
-      <path
-        d={lbRight}
-        fill="none"
-        stroke={lightbar}
-        strokeWidth={11}
-        strokeLinecap="round"
-        filter="url(#lbglow)"
-        opacity={glow}
-      />
-      <path d={lbLeft} fill="none" stroke={lightbar} strokeWidth={6} strokeLinecap="round" />
-      <path d={lbRight} fill="none" stroke={lightbar} strokeWidth={6} strokeLinecap="round" />
 
       {/* create / options buttons flanking the touchpad top corners */}
       <rect
         x={148}
-        y={60}
+        y={68}
         width={7}
         height={20}
         rx={3.5}
-        fill="#c9ccd6"
-        stroke={SHELL_EDGE}
+        fill="#2a2c34"
+        stroke="#3a3d48"
         strokeWidth={1}
-        transform="rotate(-22 151.5 66)"
+        transform="rotate(-22 151.5 78)"
       />
       <rect
         x={325}
-        y={60}
+        y={68}
         width={7}
         height={20}
         rx={3.5}
-        fill="#c9ccd6"
-        stroke={SHELL_EDGE}
+        fill="#2a2c34"
+        stroke="#3a3d48"
         strokeWidth={1}
-        transform="rotate(22 328.5 66)"
+        transform="rotate(22 328.5 78)"
       />
 
       {/* player LEDs directly below the touchpad */}
       {[0, 1, 2, 3, 4].map((i) => (
         <g key={i}>
-          {ledOn(i) && <circle cx={216 + i * 12} cy={135} r={5.5} fill="#4da3ff" opacity={0.35} />}
-          <circle cx={216 + i * 12} cy={135} r={2.5} fill={ledOn(i) ? '#2f7fe8' : '#aeb2bf'} />
+          {ledOn(i) && <circle cx={216 + i * 12} cy={134} r={5.5} fill="#dfe6ff" opacity={0.35} />}
+          <circle cx={216 + i * 12} cy={134} r={2.5} fill={ledOn(i) ? '#eef2ff' : '#3a3d48'} />
         </g>
       ))}
 
-      {/* d-pad: one-piece cross */}
-      <g fill="#d7dae2" stroke={SHELL_EDGE} strokeWidth={1.4}>
-        <rect x={119} y={85} width={22} height={58} rx={8} />
-        <rect x={101} y={103} width={58} height={22} rx={8} />
+      {/* d-pad: four standalone buttons in a cross with a center gap */}
+      <g fill="#22242c" stroke="#3a3d48" strokeWidth={1.6}>
+        <rect x={119} y={84} width={22} height={21} rx={7} />
+        <rect x={119} y={123} width={22} height={21} rx={7} />
+        <rect x={100} y={103} width={21} height={22} rx={7} />
+        <rect x={139} y={103} width={21} height={22} rx={7} />
       </g>
-      <g fill="#6b6f7c">
-        <polygon points="130,94 134.5,102 125.5,102" />
-        <polygon points="130,134 134.5,126 125.5,126" />
-        <polygon points="110,114 118,109.5 118,118.5" />
-        <polygon points="150,114 142,109.5 142,118.5" />
+      <g fill="#7b7f8c">
+        <polygon points="130,90 135,98 125,98" />
+        <polygon points="130,138 135,130 125,130" />
+        <polygon points="106,114 114,109 114,119" />
+        <polygon points="154,114 146,109 146,119" />
       </g>
 
       {/* face buttons */}
@@ -319,22 +320,19 @@ export const DualSense: React.FC<Props> = ({
       <FaceButton cx={350} cy={146} hl={highlight.cross} shape="cross" />
       <FaceButton cx={323} cy={118} hl={highlight.square} shape="square" />
 
-      {/* PS button + mic bar between the sticks */}
-      <text
-        x={240}
-        y={190}
-        textAnchor="middle"
-        fontSize={13}
-        fontWeight={800}
-        fontStyle="italic"
-        fill="#5a5e6b"
-        fontFamily="ui-sans-serif, sans-serif"
-      >
-        PS
-      </text>
-      <rect x={223} y={198} width={34} height={7} rx={3.5} fill="#b6bac6" />
+      {/* mic bar between the sticks */}
+      <rect
+        x={223}
+        y={188}
+        width={34}
+        height={7}
+        rx={3.5}
+        fill="#2a2c34"
+        stroke="#3a3d48"
+        strokeWidth={1}
+      />
       {[0, 1, 2, 3].map((i) => (
-        <circle key={i} cx={231 + i * 6} cy={201.5} r={1.2} fill="#5a5e6b" />
+        <circle key={i} cx={231 + i * 6} cy={191.5} r={1.2} fill="#6b6f7c" />
       ))}
 
       {/* analog sticks */}
