@@ -9,7 +9,8 @@ describe('controlLabel', () => {
     expect(controlLabel('south', 'ds4')).toBe('✕')
     expect(controlLabel('menu', 'dualsense')).toBe('options')
     expect(controlLabel('touchpad', 'dualsense')).toBe('▭')
-    expect(controlLabel('touchpad', 'xbox')).toBe('touchpad')
+    expect(controlLabel('touchpad', 'xbox')).toBe('⌂')
+    expect(controlLabel('touchpad', 'gamesir')).toBe('⌂')
   })
 
   it('uses ABXY face names for xbox, gamesir, and generic pads', () => {

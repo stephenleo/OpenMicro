@@ -23,6 +23,7 @@ const XBOX_FACE: Record<string, string> = {
   north: 'Y',
   menu: 'menu',
   view: 'view',
+  touchpad: '⌂', // physically the Guide/home button on these pads
 }
 
 const COMMON_CONTROLS: Record<string, string> = {
