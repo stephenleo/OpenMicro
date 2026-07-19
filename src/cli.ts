@@ -23,7 +23,7 @@ import {
   releaseAgent,
   reportAgentState,
 } from './herdr.js'
-import type { Harness } from './harness/types.js'
+import type { Action, Harness } from './harness/types.js'
 import { parseInvocation, USAGE } from './invocation.js'
 import { loadConfig } from './layers.js'
 import type { OpenMicroConfig } from './layers.js'
@@ -37,7 +37,8 @@ import { LayerRouter } from './router.js'
 import { HostServer } from './server.js'
 import { nextFocus } from './state.js'
 import type { Aggregate } from './state.js'
-import type { ButtonId, ControllerEvent } from './types.js'
+import { actionLabel, controlLabel } from './labels.js'
+import type { ButtonId, ControllerEvent, ControllerType } from './types.js'
 
 const DEFAULT_THINKING_LEVEL = 2 // 'high' — level 2 of Claude's 5 effort steps
 const FEEDBACK_DEBOUNCE_MS = 50
@@ -151,8 +152,6 @@ const agent: Pick<AgentPty, 'write' | 'dispose'> = usesPty
     )
   : {
       write: (bytes: string) => {
-        const sep = bytes.indexOf(':')
-        if (sep > 0) guiStatus(`→ ${bytes.slice(sep + 1) || bytes.slice(0, sep)}`, 35)
         harness.execute?.(bytes)
       },
       dispose: () => {},
@@ -492,9 +491,17 @@ if (!isHost) {
     scheduleFeedback()
   })
 
+  let padType: ControllerType = 'generic-hid'
+  // One status line per routed action: "triangle → push-to-talk" (physical
+  // name per pad family), replacing the raw keystroke payload dump.
+  const announce = (action: Action): void => {
+    const control = router.lastControl
+    if (control) guiStatus(`${controlLabel(control, padType)} → ${actionLabel(action)}`, 35)
+  }
   hid.on('data', (e: ControllerEvent) => {
     try {
       if (e.kind === 'connected') {
+        padType = e.controllerType
         logger.info(`Controller connected: ${e.controllerType}`)
         guiStatus(`controller connected (${e.controllerType}) — buttons now drive the app`, 32)
         scheduleFeedback()
@@ -510,11 +517,14 @@ if (!isHost) {
 
       // Held d-pad arrows auto-repeat; every other control fires once on press.
       if (e.kind === 'button' && REPEATING.has(e.button) && action.type === 'keys') {
-        if (e.pressed) repeater.press(e.button, () => dispatchAction(action, deps))
-        else repeater.release(e.button)
+        if (e.pressed) {
+          announce(action)
+          repeater.press(e.button, () => dispatchAction(action, deps))
+        } else repeater.release(e.button)
         return
       }
       if (e.kind === 'button' && !e.pressed) return // press-only for non-repeating buttons
+      announce(action)
       if (action.type === 'push_to_talk') retargetVoice()
       dispatchAction(action, deps)
     } catch (err) {
