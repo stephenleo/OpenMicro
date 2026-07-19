@@ -13,6 +13,7 @@ const PLAYSTATION_FACE: Record<string, string> = {
   north: '△',
   menu: 'options',
   view: 'create',
+  touchpad: '▭',
 }
 
 const XBOX_FACE: Record<string, string> = {
