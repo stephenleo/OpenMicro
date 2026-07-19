@@ -1,6 +1,6 @@
 import React from 'react'
 import { useCurrentFrame } from 'remotion'
-import { DualSense } from '../components/DualSense'
+import { DualSense, RIGHT_STICK } from '../components/DualSense'
 import { Terminal, Prompt, StatusLine } from '../components/Terminal'
 import { SceneFrame } from '../components/SceneFrame'
 import { COLORS, DIM, kf } from '../components/timeline'
@@ -37,12 +37,11 @@ export const ThinkingDial: React.FC = () => {
   const level = frame >= 50 && frame < 175 ? 'xhigh' : 'high'
   const showSlash = frame >= 20
 
-  // arc trace around right stick (center 245,131, r 31)
+  // arc trace just outside the right stick well
   const arcSweep = deg
   const arcPath = (endDeg: number): string => {
-    const r = 31
-    const cx = 245
-    const cy = 131
+    const r = 39
+    const { cx, cy } = RIGHT_STICK
     const clamped = Math.max(-359.9, Math.min(359.9, endDeg))
     const a0 = -90
     const a1 = -90 + clamped
@@ -64,8 +63,8 @@ export const ThinkingDial: React.FC = () => {
             <path
               d={arcPath(arcSweep)}
               fill="none"
-              stroke="#c792ea"
-              strokeWidth={3}
+              stroke="#a020f0"
+              strokeWidth={4}
               strokeLinecap="round"
               opacity={0.9}
             />

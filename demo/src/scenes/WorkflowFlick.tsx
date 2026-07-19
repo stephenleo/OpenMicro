@@ -54,31 +54,31 @@ export const WorkflowFlick: React.FC = () => {
               ])}
             >
               <path
-                d="M 149 128 L 152 104 M 155 126 L 155 100 M 161 128 L 158 104"
-                stroke="#8ab4ff"
-                strokeWidth={3}
+                d="M 168 186 L 171 156 M 176 184 L 176 152 M 184 186 L 181 156"
+                stroke="#4da3ff"
+                strokeWidth={3.5}
                 strokeLinecap="round"
-                opacity={0.8}
+                opacity={0.85}
               />
             </g>
           )}
           {showLabel && (
             <g>
               <rect
-                x={119}
-                y={166}
-                width={72}
-                height={18}
-                rx={9}
+                x={136}
+                y={248}
+                width={80}
+                height={20}
+                rx={10}
                 fill="#1c2740"
-                stroke="#8ab4ff"
+                stroke="#4da3ff"
                 strokeWidth={1}
               />
               <text
-                x={155}
-                y={178.5}
+                x={176}
+                y={262}
                 textAnchor="middle"
-                fontSize={10}
+                fontSize={11}
                 fontWeight={700}
                 fill="#8ab4ff"
                 fontFamily="ui-sans-serif, sans-serif"
