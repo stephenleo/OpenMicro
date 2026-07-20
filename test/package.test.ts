@@ -18,21 +18,15 @@ describe('packed controller API', () => {
   beforeAll(() => {
     run('npm', ['run', 'build'])
     temp = fs.mkdtempSync(path.join(root, 'node_modules', '.openmicro-package-'))
-    const pack = JSON.parse(
-      run('npm', ['pack', '--ignore-scripts', '--json', '--pack-destination', temp], root, {
-        ...process.env,
-        npm_config_cache: path.join(temp, '.npm-cache'),
-      }),
-    ) as Array<{ filename: string }>
+    run('npm', ['pack', '--ignore-scripts', '--pack-destination', temp], root, {
+      ...process.env,
+      npm_config_cache: path.join(temp, '.npm-cache'),
+    })
+    const tarball = fs.readdirSync(temp).find((file) => file.endsWith('.tgz'))
+    expect(tarball).toBeDefined()
     const packageDir = path.join(temp, 'node_modules', 'openmicro')
     fs.mkdirSync(packageDir, { recursive: true })
-    run('tar', [
-      '-xzf',
-      path.join(temp, pack[0]!.filename),
-      '-C',
-      packageDir,
-      '--strip-components=1',
-    ])
+    run('tar', ['-xzf', path.join(temp, tarball!), '-C', packageDir, '--strip-components=1'])
   }, 60_000)
 
   afterAll(() => {
