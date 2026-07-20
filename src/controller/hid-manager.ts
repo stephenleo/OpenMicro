@@ -81,11 +81,11 @@ export function createDriver(): ControllerHAL | null {
  * one appears, and resumes polling after a disconnect — plugging a controller
  * in or waking it mid-session just works.
  */
-export class HidManager extends EventEmitter {
+export class HidManager extends EventEmitter<{ data: [ControllerEvent] }> {
   private driver: ControllerHAL | null = null
   private deduper = new Deduper()
   private pollTimer: ReturnType<typeof setInterval> | null = null
-  private stopped = false
+  private stopped = true
 
   /** Live output surface of the active driver (DualSense only), or undefined. */
   get output(): ControllerOutput | undefined {
@@ -93,6 +93,7 @@ export class HidManager extends EventEmitter {
   }
 
   start(): void {
+    if (!this.stopped) return
     this.stopped = false
     this.attach()
   }
