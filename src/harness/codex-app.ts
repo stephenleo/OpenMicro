@@ -169,7 +169,14 @@ export function cycleThread(
   cur: DesktopCursor = cursor,
 ): DesktopThread | null {
   if (threads.length === 0) return null
-  const cwd = cur.cwd ?? threads[0]!.cwd
+  if (cur.cwd === null) {
+    const active = threads.reduce((latest, thread) =>
+      thread.mtime > latest.mtime ? thread : latest,
+    )
+    cur.threadId = active.id
+    cur.cwd = active.cwd
+  }
+  const cwd = cur.cwd
   const scoped = threads.filter((t) => t.cwd === cwd)
   const list = scoped.length > 0 ? scoped : threads
   const index = list.findIndex((t) => t.id === cur.threadId)
