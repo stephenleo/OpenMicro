@@ -240,9 +240,20 @@ describe('codex-app harness', () => {
       { id: 't1', cwd: '/p1', mtime: 1 },
     ]
     const cur = { threadId: null, cwd: null }
-    expect(cycleThread(threads, cur)?.id).toBe('t3') // nothing selected yet — start at newest
     expect(cycleThread(threads, cur)?.id).toBe('t1')
     expect(cycleThread(threads, cur)?.id).toBe('t3') // wraps, never leaves /p1
+  })
+
+  it('starts from the most active thread instead of the newest-created project', () => {
+    const threads = [
+      { id: 'new-singleton', cwd: '/new', mtime: 2 },
+      { id: 'active', cwd: '/current', mtime: 4 },
+      { id: 'next', cwd: '/current', mtime: 3 },
+    ]
+    const cur = { threadId: null, cwd: null }
+
+    expect(cycleThread(threads, cur)?.id).toBe('next')
+    expect(cycleThread(threads, cur)?.id).toBe('active')
   })
 
   it('cycles projects by recency with wrap-around, landing on the newest thread', () => {
