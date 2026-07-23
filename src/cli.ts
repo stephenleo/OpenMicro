@@ -31,13 +31,14 @@ import { effectiveFocusIndex, feedbackFor } from './feedback.js'
 import type { RGB } from './feedback.js'
 import { KeyRepeater } from './keymap.js'
 import { logger } from './logger.js'
+import { actionStatus, agentStatus, controllerStatus } from './logging.js'
+import type { GuiStatus, GuiStatusTone } from './logging.js'
 import { HOST_PORT } from './ports.js'
 import { AgentPty } from './pty.js'
 import { LayerRouter } from './router.js'
 import { HostServer } from './server.js'
 import { nextFocus } from './state.js'
 import type { Aggregate } from './state.js'
-import { actionLabel, controlLabel } from './labels.js'
 import type { ButtonId, ControllerEvent, ControllerType } from './types.js'
 
 const DEFAULT_THINKING_LEVEL = 2 // 'high' — level 2 of Claude's 5 effort steps
@@ -124,7 +125,10 @@ const usesPty = harness.usesPty ?? true
 // GUI-mode terminal status. The terminal is ours here (no TUI passthrough),
 // so show live status: plain ANSI colors, no dependency. No-op for pty
 // harnesses — their terminal belongs to the wrapped TUI.
-const STATE_TINT: Record<string, number> = {
+const STATUS_TINT: Record<GuiStatusTone, number> = {
+  success: 32,
+  warning: 33,
+  action: 35,
   executing: 32, // green
   waiting: 33, // yellow
   complete: 36, // cyan
@@ -134,6 +138,9 @@ const STATE_TINT: Record<string, number> = {
 function guiStatus(msg: string, tint = 90): void {
   if (!usesPty && process.stderr.isTTY) console.error(`\x1b[${tint}m●\x1b[0m ${msg}`)
   else if (!usesPty) console.error(msg)
+}
+function reportGuiStatus(status: GuiStatus | null): void {
+  if (status) guiStatus(status.message, STATUS_TINT[status.tone])
 }
 
 const agent: Pick<AgentPty, 'write' | 'dispose'> = usesPty
@@ -469,13 +476,13 @@ if (!isHost) {
   // other signal, and only when the app fires the shared lifecycle hooks).
   let lastGuiStates = ''
   function reportGuiStates(): void {
-    const states = server.tracker
-      .list()
-      .map((s) => s.state)
-      .join(', ')
-    if (!states || states === lastGuiStates) return
-    lastGuiStates = states
-    guiStatus(`agent: ${states}`, STATE_TINT[server.tracker.list()[0]?.state ?? 'idle'] ?? 90)
+    const status = agentStatus(
+      server.tracker.list().map((session) => session.state),
+      lastGuiStates,
+    )
+    if (!status) return
+    lastGuiStates = status.stateKey
+    reportGuiStatus(status)
   }
 
   let lastAttentionId: string | null = null
@@ -497,21 +504,20 @@ if (!isHost) {
   // One status line per routed action: "triangle → push-to-talk" (physical
   // name per pad family), replacing the raw keystroke payload dump.
   const announce = (action: Action): void => {
-    const control = router.lastControl
-    if (control) guiStatus(`${controlLabel(control, padType)} → ${actionLabel(action)}`, 35)
+    reportGuiStatus(actionStatus(router.lastControl, padType, action))
   }
   hid.on('data', (e: ControllerEvent) => {
     try {
       if (e.kind === 'connected') {
         padType = e.controllerType
         logger.info(`Controller connected: ${e.controllerType}`)
-        guiStatus(`controller connected (${e.controllerType}) — buttons now drive the app`, 32)
+        reportGuiStatus(controllerStatus(e))
         scheduleFeedback()
         return
       }
       if (e.kind === 'disconnected') {
         repeater.releaseAll()
-        guiStatus('controller disconnected — waiting…', 33)
+        reportGuiStatus(controllerStatus(e))
         return
       }
       const action = router.route(e)

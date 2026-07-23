@@ -14,7 +14,7 @@ function run(command: string, args: string[], cwd = root, env = process.env): st
   return result.stdout
 }
 
-describe('packed controller API', () => {
+describe('packed public APIs', () => {
   beforeAll(() => {
     run('npm', ['run', 'build'])
     temp = fs.mkdtempSync(path.join(root, 'node_modules', '.openmicro-package-'))
@@ -38,8 +38,12 @@ describe('packed controller API', () => {
     const source = `
 process.argv.push('--help')
 const api = await import('openmicro/controller')
+const logging = await import('openmicro/logging')
 if (typeof api.HidManager !== 'function') throw new Error('HidManager is not exported')
-process.stdout.write(JSON.stringify(Object.keys(api).sort()))
+process.stdout.write(JSON.stringify({
+  controller: Object.keys(api).sort(),
+  logging: Object.keys(logging).sort(),
+}))
 `
     const result = spawnSync(process.execPath, ['--input-type=module', '--eval', source], {
       cwd: temp,
@@ -49,7 +53,9 @@ process.stdout.write(JSON.stringify(Object.keys(api).sort()))
     })
 
     expect(result.status, result.stderr).toBe(0)
-    expect(result.stdout).toBe('["HidManager"]')
+    expect(result.stdout).toBe(
+      '{"controller":["HidManager"],"logging":["actionStatus","agentStatus","controllerStatus"]}',
+    )
     expect(result.stderr).toBe('')
     expect(fs.readdirSync(home)).toEqual([])
     fs.rmSync(home, { force: true, recursive: true })
@@ -59,17 +65,24 @@ process.stdout.write(JSON.stringify(Object.keys(api).sort()))
     fs.writeFileSync(
       path.join(temp, 'consumer.ts'),
       `import { HidManager, type AxisId, type ButtonId, type ControllerEvent, type ControllerType } from 'openmicro/controller'
+import { type Action } from 'openmicro/harness'
+import { actionStatus, agentStatus, controllerStatus, type AgentStatus, type GuiStatus, type GuiStatusTone } from 'openmicro/logging'
 const axis: AxisId = 'left_x'
 const button: ButtonId = 'south'
 const type: ControllerType = 'dualsense'
 const event: ControllerEvent = { kind: 'axis', axis, value: 0 }
+const action: Action = { type: 'accept' }
+const tone: GuiStatusTone = 'action'
+const status: GuiStatus | null = actionStatus(button, type, action)
+const lifecycle: GuiStatus | null = controllerStatus({ kind: 'connected', controllerType: type })
+const state: AgentStatus | null = agentStatus(['waiting'])
 const manager = new HidManager()
 manager.on('data', (value) => {
   const typed: ControllerEvent = value
   void typed
 })
 manager.stop()
-void [button, type, event]
+void [button, type, event, tone, status, lifecycle, state]
 `,
     )
 

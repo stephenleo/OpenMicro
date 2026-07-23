@@ -204,6 +204,20 @@ controller.stop()
 
 `start()` discovers and verifies a supported device, emits a `connected` event, then emits deduplicated `button` and `axis` state changes. Stick axes use `-1..1`; triggers use `0..1`. A `disconnected` event is followed by automatic reconnect polling. `start()` and `stop()` are idempotent; call `stop()` when the consumer shuts down to release polling and device ownership.
 
+## Embed GUI status logs
+
+The side-effect-free `openmicro/logging` API exposes the same safe status messages as the OpenMicro GUI CLI:
+
+```ts
+import { actionStatus, agentStatus, controllerStatus } from 'openmicro/logging'
+
+const lifecycle = controllerStatus(controllerEvent)
+const action = actionStatus('north', 'dualsense', { type: 'push_to_talk', pressed: true })
+const state = agentStatus(['waiting'], previousStateKey)
+```
+
+Each function returns `{ message, tone }` or `null`; agent statuses also return `stateKey` for the next deduplication call. Prompt text and unknown raw key bytes are never included. The embedding application owns output, ANSI styling, successful-action checks, and repeat/release suppression.
+
 ## Troubleshooting
 
 ### Controller is connected but OpenMicro cannot open it

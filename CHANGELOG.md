@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.4.0] - 2026-07-23
+
+### Added
+
+- **Embeddable GUI logging API.** `openmicro/logging` exports the CLI's side-effect-free controller lifecycle, routed-action, and deduplicated agent-state status formatters. Messages redact prompt text and unknown raw key bytes; consumers retain control of output, styling, and repeat/release suppression.
+
+### Changed
+
+- The OpenMicro GUI CLI now consumes the same public logging formatters, keeping embedded and standalone status messages identical.
+
+### Fixed
+
+- **Codex app: touchpad cycling now starts from the most recently active chat.** A cold cursor previously assumed the newest-created chat was frontmost, which could trap repeated presses on one session in projects with multiple open chats.
+
 ## [1.3.0] - 2026-07-20
 
 ### Added

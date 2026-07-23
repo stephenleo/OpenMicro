@@ -1,6 +1,6 @@
 {
   "name": "openmicro",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Open-source replica of Work Louder's Codex Micro using a consumer gamepad as the physical AI-agent controller.",
   "license": "MIT",
   "author": "stephenleo",
@@ -24,6 +24,10 @@
     "./controller": {
       "types": "./dist/controller/index.d.ts",
       "default": "./dist/controller/index.js"
+    },
+    "./logging": {
+      "types": "./dist/logging.d.ts",
+      "default": "./dist/logging.js"
     },
     "./package.json": "./package.json"
   },
