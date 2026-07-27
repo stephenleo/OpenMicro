@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Unreleased]
+
+### Added
+
+- **Xbox Elite Series 2 wired support.** The pad (`045e:0b00`) speaks the same 18-byte GIP input frame over USB as the already-supported Xbox One S, but its PID was unlisted, so it fell through to the `generic` driver and produced no input. Adding it to `XBOX_GIP_PIDS` is sufficient; no parser changes were needed.
+
 ## [1.4.0] - 2026-07-23
 
 ### Added
