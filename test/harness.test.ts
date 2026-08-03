@@ -146,6 +146,7 @@ describe('codex-app harness', () => {
 
   it('is a GUI harness (no pty)', () => {
     expect(codexAppHarness.usesPty).toBe(false)
+    expect(codexAppHarness.buildArgs([])).toEqual(['-b', 'com.openai.codex'])
   })
 
   it('resolves actions to tagged open/osascript bytes', () => {
@@ -298,7 +299,7 @@ describe('codex-app harness', () => {
       'osascript',
       [
         '-e',
-        'tell application "Codex" to activate',
+        'tell application id "com.openai.codex" to activate',
         '-e',
         'delay 0.15',
         '-e',

@@ -1,5 +1,5 @@
-// Codex macOS desktop app harness (/Applications/Codex.app, AppleScript name
-// "Codex", bundle com.openai.codex). GUI harness: no pty is spawned. Actions
+// Codex macOS desktop app harness (bundle com.openai.codex; the installed app
+// may be named Codex or ChatGPT). GUI harness: no pty is spawned. Actions
 // resolve to tagged strings that execute() turns into `open` deep links or
 // System Events keystrokes into the frontmost Codex window.
 
@@ -228,7 +228,7 @@ export const codexAppHarness: Harness = {
   // to launch/activate the app, mirroring how pty harnesses launch their CLI.
   command: 'open',
   buildArgs(): string[] {
-    return ['-a', 'Codex']
+    return ['-b', 'com.openai.codex']
   },
 
   installHooks() {
@@ -338,7 +338,7 @@ export const codexAppHarness: Harness = {
       // The short delay lets activation land before the keystroke — without it
       // a keypress sent while Codex is still coming frontmost is dropped.
       enqueueOsascript(
-        ['-e', 'tell application "Codex" to activate', '-e', 'delay 0.15', ...steps],
+        ['-e', 'tell application id "com.openai.codex" to activate', '-e', 'delay 0.15', ...steps],
         (err, stderr) => {
           report(err, stderr)
           // A failed/timed-out chord may have landed its `key down` steps but
