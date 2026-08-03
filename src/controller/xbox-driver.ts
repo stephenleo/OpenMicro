@@ -4,14 +4,15 @@
 import type { ButtonId, ControllerEvent } from '../types.js'
 
 export const XBOX_VID = 0x045e
-export const XBOX_PIDS = [0x0b12, 0x0b13, 0x02fd, 0x02e0]
+export const XBOX_PIDS = [0x0b12, 0x02fd, 0x02e0]
 // Wired pads that speak GIP over USB (macOS exposes them via HID with the raw
 // GIP input frame). Verified against live Xbox One S (0x02ea) and Xbox Elite
 // Series 2 (0x0b00) captures.
 export const XBOX_GIP_PIDS = [0x02ea, 0x0b00]
 // Bluetooth pads using the standard Xbox BT HID report (report ID 0x01).
-// Verified against a live Xbox Wireless Controller (0x0b20) capture.
-export const XBOX_BT_PIDS = [0x0b20]
+// Verified against live Xbox Wireless Controller (0x0b20) and Xbox Elite
+// Series 2 (0x0b13) captures.
+export const XBOX_BT_PIDS = [0x0b13, 0x0b20]
 
 /** Normalize a signed 16-bit stick value to -1.0..1.0. */
 function normalizeAxis(raw: number): number {

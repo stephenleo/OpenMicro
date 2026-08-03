@@ -8,14 +8,15 @@ Every controller below has a committed `openmicro doctor` report. CI replays cap
 
 <!-- controllers:start -->
 
-| Controller                      | Reports as                      | VID:PID   | Connection | Driver    | Buttons passed | Output        | Status  |
-| ------------------------------- | ------------------------------- | --------- | ---------- | --------- | -------------- | ------------- | ------- |
-| GameSir Cyclone 2 (DS4 mode)    | DUALSHOCK 4 Wireless Controller | 054c:05c4 | bluetooth  | ds4       | 17/17          | none          | ✅ full |
-| GameSir G7 Pro                  | GameSir-G7 Pro                  | 3537:1022 | bluetooth  | gamesir   | 17/17          | none          | ✅ full |
-| Microsoft Xbox Elite Series 2   | Controller                      | 045e:0b00 | usb        | xbox      | 17/17          | none          | ✅ full |
-| Microsoft Xbox One S Controller | Controller                      | 045e:02ea | usb        | xbox      | 17/17          | none          | ✅ full |
-| Microsoft Xbox One S Controller | Xbox Wireless Controller        | 045e:0b20 | bluetooth  | xbox      | 17/17          | none          | ✅ full |
-| Sony DualSense                  | DualSense Wireless Controller   | 054c:0ce6 | usb        | dualsense | 17/17          | lightbar+LEDs | ✅ full |
+| Controller                                | Reports as                      | VID:PID   | Connection | Driver    | Buttons passed | Output        | Status  |
+| ----------------------------------------- | ------------------------------- | --------- | ---------- | --------- | -------------- | ------------- | ------- |
+| GameSir Cyclone 2 (DS4 mode)              | DUALSHOCK 4 Wireless Controller | 054c:05c4 | bluetooth  | ds4       | 17/17          | none          | ✅ full |
+| GameSir G7 Pro                            | GameSir-G7 Pro                  | 3537:1022 | bluetooth  | gamesir   | 17/17          | none          | ✅ full |
+| Microsoft Xbox Elite Series 2             | Controller                      | 045e:0b00 | usb        | xbox      | 17/17          | none          | ✅ full |
+| Microsoft Xbox Elite Series 2 (Bluetooth) | Xbox Wireless Controller        | 045e:0b13 | bluetooth  | xbox      | 17/17          | none          | ✅ full |
+| Microsoft Xbox One S Controller           | Controller                      | 045e:02ea | usb        | xbox      | 17/17          | none          | ✅ full |
+| Microsoft Xbox One S Controller           | Xbox Wireless Controller        | 045e:0b20 | bluetooth  | xbox      | 17/17          | none          | ✅ full |
+| Sony DualSense                            | DualSense Wireless Controller   | 054c:0ce6 | usb        | dualsense | 17/17          | lightbar+LEDs | ✅ full |
 
 <!-- controllers:end -->
 

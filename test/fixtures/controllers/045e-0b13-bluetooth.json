@@ -1,0 +1,138 @@
+{
+  "schemaVersion": 1,
+  "openmicroVersion": "1.4.1",
+  "platform": "darwin",
+  "osVersion": "Darwin Kernel Version 27.0.0: Tue Jul 14 21:43:15 PDT 2026; root:xnu-13432.0.94.501.4~1/RELEASE_ARM64_T6050",
+  "controller": {
+    "vid": "0x045e",
+    "pid": "0x0b13",
+    "product": "Xbox Wireless Controller",
+    "makeModel": "Microsoft Xbox Elite Series 2 (Bluetooth)",
+    "transport": "bluetooth",
+    "driver": "xbox"
+  },
+  "results": {
+    "south": {
+      "status": "pass",
+      "capture": {
+        "idle": "",
+        "pressed": "013e82287b437fd2790000000000010000000a00"
+      }
+    },
+    "east": {
+      "status": "pass",
+      "capture": {
+        "idle": "013e82287b437fd2790000000000010000000a00",
+        "pressed": "013e82287b437fd2790000000000020000000a00"
+      }
+    },
+    "west": {
+      "status": "pass",
+      "capture": {
+        "idle": "013e82287b537cd2790000000000000000000a00",
+        "pressed": "013e82287b537cd2790000000000080000000a00"
+      }
+    },
+    "north": {
+      "status": "pass",
+      "capture": {
+        "idle": "013e82287b537cd2790000000000100000000a00",
+        "pressed": "013e82287b537cd2790000000000100000000a00"
+      }
+    },
+    "dpad_up": {
+      "status": "pass",
+      "capture": {
+        "idle": "013e82287b537cd2790000000000000000000a00",
+        "pressed": "013e82287b697b377a0000000001000000000a00"
+      }
+    },
+    "dpad_down": {
+      "status": "pass",
+      "capture": {
+        "idle": "013e82287b697b377a0000000000000000000a00",
+        "pressed": "013e82287b697b377a0000000005000000000a00"
+      }
+    },
+    "dpad_left": {
+      "status": "pass",
+      "capture": {
+        "idle": "013e82287b697be4790000000000000000000a00",
+        "pressed": "013e82287b697be4790000000007000000000a00"
+      }
+    },
+    "dpad_right": {
+      "status": "pass",
+      "capture": {
+        "idle": "013e82287b1786167b0000000003000000000a00",
+        "pressed": "013e82287b1786df7a0000000003000000000a00"
+      }
+    },
+    "l1": {
+      "status": "pass",
+      "capture": {
+        "idle": "013e82287bd27ed97a0000000000400000000a00",
+        "pressed": "013e82287bd27ed97a0000000000400000000a00"
+      }
+    },
+    "r1": {
+      "status": "pass",
+      "capture": {
+        "idle": "013e82287b7784837b0000000000800000000a00",
+        "pressed": "013e82287bc683137b0000000000800000000a00"
+      }
+    },
+    "l2": {
+      "status": "pass",
+      "capture": {
+        "idle": "013e82287bc683137bff03000000000000000a00",
+        "pressed": "013e82287bc683137bff03000000000000000a00"
+      }
+    },
+    "r2": {
+      "status": "pass",
+      "capture": {
+        "idle": "013e82287bc683137b0000ff0300000000000a00",
+        "pressed": "013e82287bc683137b0000ff0300000000000a00"
+      }
+    },
+    "l3": {
+      "status": "pass",
+      "capture": {
+        "idle": "01a6761f81c683137b0000000000002000000a00",
+        "pressed": "01417b4d90c683137b0000000000002000000a00"
+      }
+    },
+    "r3": {
+      "status": "pass",
+      "capture": {
+        "idle": "019f7929892a6a0a730000000000000000000a00",
+        "pressed": "01f678298916626d700000000000004000000a00"
+      }
+    },
+    "menu": {
+      "status": "pass",
+      "capture": {
+        "idle": "01f6782989437c89790000000000000000000a00",
+        "pressed": "0183792989a47e27810000000000000800000a00"
+      }
+    },
+    "view": {
+      "status": "pass",
+      "capture": {
+        "idle": "01837929896178c27f0000000000000400000a00",
+        "pressed": "01837929896178c27f0000000000000400000a00"
+      }
+    },
+    "touchpad": {
+      "status": "pass",
+      "capture": {
+        "idle": "01837929896178517f0000000000001000000a00",
+        "pressed": "0111792989bf79517f0000000000001000000a00"
+      }
+    }
+  },
+  "axes": {},
+  "output": "unsupported",
+  "timestamp": "2026-08-03T11:04:34.773Z"
+}
