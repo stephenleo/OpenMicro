@@ -27,11 +27,13 @@ function normalizeAxis(raw: number): number {
  * Exact layout varies by firmware; this matches the common wired layout.
  */
 /**
- * Parse a standard Xbox Bluetooth HID report (17 bytes, report ID 0x01).
+ * Parse a standard Xbox Bluetooth HID report (17+ bytes, report ID 0x01).
  * Bytes 1-8: sticks (uint16 LE, centre 0x8000), bytes 9-12: triggers
  * (uint16 LE, 0-1023), byte 13: dpad hat (1-8 clockwise from north),
  * byte 14: face buttons/bumpers, byte 15: view/menu/guide/stick clicks.
- * Layout verified against a live Xbox Wireless Controller (045e:0b20) capture.
+ * Trailing bytes (the Elite Series 2 sends 20) carry paddle/profile state we
+ * do not decode. Layout verified against live Xbox Wireless Controller
+ * (045e:0b20) and Xbox Elite Series 2 (045e:0b13) captures.
  */
 export function parseXboxBtReport(data: Buffer): ControllerEvent[] {
   const events: ControllerEvent[] = []
