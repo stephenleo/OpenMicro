@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 1,
+  "openmicroVersion": "1.4.2",
+  "platform": "darwin",
+  "osVersion": "Darwin Kernel Version 25.5.0: Mon Apr 27 20:38:56 PDT 2026; root:xnu-12377.121.6~2/RELEASE_ARM64_T6000",
+  "controller": {
+    "vid": "0x18d1",
+    "pid": "0x9400",
+    "product": "Stadia Controller rev. A",
+    "transport": "usb",
+    "driver": "none"
+  },
+  "results": {
+    "south": {
+      "status": "capture",
+      "capture": {
+        "idle": "",
+        "pressed": "0308004080808080000000"
+      }
+    },
+    "east": {
+      "status": "capture",
+      "capture": {
+        "idle": "0308000080808080000000",
+        "pressed": "0308002080808080000000"
+      }
+    },
+    "west": {
+      "status": "capture",
+      "capture": {
+        "idle": "0308000080808080000000",
+        "pressed": "0308001080808080003c00"
+      }
+    },
+    "north": {
+      "status": "capture",
+      "capture": {
+        "idle": "0308000080808080002600",
+        "pressed": "0308000880808080000000"
+      }
+    },
+    "dpad_up": {
+      "status": "capture",
+      "capture": {
+        "idle": "0308000080808080000000",
+        "pressed": "0300000080808080000000"
+      }
+    },
+    "dpad_down": {
+      "status": "capture",
+      "capture": {
+        "idle": "0308000080808080000000",
+        "pressed": "0304000080808080000000"
+      }
+    },
+    "dpad_left": {
+      "status": "capture",
+      "capture": {
+        "idle": "0308000080808080000000",
+        "pressed": "0306000080808080000000"
+      }
+    },
+    "dpad_right": {
+      "status": "capture",
+      "capture": {
+        "idle": "0308000080808080000000",
+        "pressed": "0302000080808080000000"
+      }
+    },
+    "l1": {
+      "status": "capture",
+      "capture": {
+        "idle": "0308000080808080000000",
+        "pressed": "0308000480808080000000"
+      }
+    },
+    "r1": {
+      "status": "capture",
+      "capture": {
+        "idle": "0308000080808080000000",
+        "pressed": "0308000280808080000000"
+      }
+    },
+    "l2": {
+      "status": "capture",
+      "capture": {
+        "idle": "0308000080808080000000",
+        "pressed": "0308040080808080ff0000"
+      }
+    },
+    "r2": {
+      "status": "capture",
+      "capture": {
+        "idle": "0308000080808080000000",
+        "pressed": "030808008080808000ff00"
+      }
+    },
+    "l3": {
+      "status": "capture",
+      "capture": {
+        "idle": "0308000080808080000000",
+        "pressed": "0308000180808080000000"
+      }
+    },
+    "r3": {
+      "status": "capture",
+      "capture": {
+        "idle": "0308000080808080000000",
+        "pressed": "0308800080808080000000"
+      }
+    },
+    "menu": {
+      "status": "capture",
+      "capture": {
+        "idle": "0308000080808080000000",
+        "pressed": "0308200080808080000000"
+      }
+    },
+    "view": {
+      "status": "capture",
+      "capture": {
+        "idle": "0308000080808080000000",
+        "pressed": "0308010080808080000000"
+      }
+    },
+    "touchpad": {
+      "status": "capture",
+      "capture": {
+        "idle": "0308000080808080000000",
+        "pressed": "0308100080808080000000"
+      }
+    }
+  },
+  "axes": {},
+  "output": "unsupported",
+  "timestamp": "2026-08-12T17:42:17.239Z"
+}
