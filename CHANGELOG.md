@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [1.4.3] - 2026-08-23
+
+### Added
+
+- **Google Stadia Controller wired USB capture report.** A capture-only doctor fixture now records all 17 controls from the unsupported Stadia Controller rev. A (`18d1:9400`), providing raw HID evidence for a future driver while keeping the compatibility table explicit that input is not yet supported.
+
 ## [1.4.2] - 2026-08-04
 
 ### Fixed
