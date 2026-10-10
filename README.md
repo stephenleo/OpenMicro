@@ -51,6 +51,21 @@ Stick flicks fire after returning to center. Rotation gestures (`rstick_cw`/`rst
 
 Voice and thinking-depth support varies by harness; see [OpenMicro feature parity](#openmicro-feature-parity).
 
+#### Set up push-to-talk in Claude Code
+
+The north button (△ / Y) starts and stops Claude Code dictation. It needs two settings:
+
+1. Turn voice on with `/voice`.
+2. Set the voice mode to `tap`. The default mode, `hold`, doesn't work with a controller. The `/config` screen doesn't show this setting, so add it to `~/.claude/settings.json` yourself:
+
+   ```json
+   "voice": { "enabled": true, "mode": "tap" }
+   ```
+
+   Then restart Claude Code.
+
+In tap mode, press △ / Y once to start listening and again to stop. In `hold` mode, Claude Code detects a held Space by the repeated keystrokes a keyboard sends while the key is down. The controller sends one Space per press, so Claude Code types a space and doesn't start listening.
+
 ## See it in action
 
 Animated demos (rendered, not filmed) of the six core interactions:
@@ -60,6 +75,16 @@ Animated demos (rendered, not filmed) of the six core interactions:
 | ![Lightbar status colors follow the focused session](assets/demo/status-leds.gif)<br>**Status lightbar** — executing, waiting, done, error | ![Face buttons submit, interrupt, dictate, and start a new chat](assets/demo/command-keys.gif)<br>**Command keys** — ✕ ○ △ □ |
 |        ![Left-stick flick launches a workflow prompt](assets/demo/workflow-flick.gif)<br>**Workflow flick** — stick up = review PR         | ![Right-stick flicks step thinking depth](assets/demo/thinking-dial.gif)<br>**Thinking dial** — stick flicks step `/effort`  |
 |                 ![L1 plus a face button switches control layers](assets/demo/layers.gif)<br>**Layers** — hold L1 to switch                 | ![Touchpad click moves focus between sessions](assets/demo/multi-session.gif)<br>**Multi-session** — touchpad switches focus |
+
+### Xbox 360 Controller (wired)
+
+The same interactions on the wired Xbox 360 Controller. Face buttons map by position (A = ✕, B = ○, Y = △, X = □), LB stands in for L1, and the Guide button takes the touchpad's role. OpenMicro can't drive the 360's Ring of Light, so session status appears only in the terminal and there is no status-lightbar demo.
+
+|                                                                                                                                               |                                                                                                                                              |
+| :-------------------------------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------------------------: |
+| ![Xbox 360 face buttons submit, interrupt, dictate, and start a new chat](assets/demo/xbox360/command-keys.gif)<br>**Command keys** — A B Y X | ![Xbox 360 left-stick flick launches a workflow prompt](assets/demo/xbox360/workflow-flick.gif)<br>**Workflow flick** — stick up = review PR |
+| ![Xbox 360 right-stick flicks step thinking depth](assets/demo/xbox360/thinking-dial.gif)<br>**Thinking dial** — stick flicks step `/effort`  |         ![Xbox 360 LB plus a face button switches control layers](assets/demo/xbox360/layers.gif)<br>**Layers** — hold LB to switch          |
+|   ![Xbox 360 Guide button moves focus between sessions](assets/demo/xbox360/multi-session.gif)<br>**Multi-session** — Guide switches focus    |                                                                                                                                              |
 
 ## What it gives you
 
@@ -82,7 +107,7 @@ Animated demos (rendered, not filmed) of the six core interactions:
 | Start a new chat                 | ✅ `/clear`                    | ✅ `/new`                    |
 | D-pad TUI navigation             | ✅ Arrow-key passthrough       | ✅ Arrow-key passthrough     |
 | Stick-triggered workflow prompts | ✅ Supported                   | ✅ Supported                 |
-| Push-to-talk                     | ✅ Enable with `/voice`        | — No equivalent              |
+| Push-to-talk                     | ⚠️ `/voice`, `tap` mode        | — No equivalent              |
 | Thinking-depth dial              | ✅ `/effort`, low → max        | — No deterministic binding   |
 | Six remappable control layers    | ✅ Supported                   | ✅ Supported                 |
 | Multi-session focus switching    | ✅ Supported                   | ✅ Supported                 |
@@ -219,6 +244,10 @@ const state = agentStatus(['waiting'], previousStateKey)
 Each function returns `{ message, tone }` or `null`; agent statuses also return `stateKey` for the next deduplication call. Prompt text and unknown raw key bytes are never included. The embedding application owns output, ANSI styling, successful-action checks, and repeat/release suppression.
 
 ## Troubleshooting
+
+### △ / Y types a space instead of starting dictation
+
+Claude Code's voice mode is set to `hold`. Change it to `tap`; see [Set up push-to-talk in Claude Code](#set-up-push-to-talk-in-claude-code).
 
 ### Controller is connected but OpenMicro cannot open it
 

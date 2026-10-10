@@ -1,25 +1,28 @@
 import React from 'react'
 import { useCurrentFrame } from 'remotion'
-import { DualSense, ButtonId } from '../components/DualSense'
+import { ButtonId } from '../components/DualSense'
+import { LABELS, Pad, SceneProps } from '../components/Pad'
 import { Terminal, Prompt, StatusLine, Cursor } from '../components/Terminal'
 import { SceneFrame } from '../components/SceneFrame'
 import { COLORS, mixColor, pulse } from '../components/timeline'
 
 const SEG = 75 // frames per button segment
 
-const LABELS: { btn: ButtonId; glyph: string; label: string }[] = [
-  { btn: 'cross', glyph: '✕', label: 'Submit ⏎' },
-  { btn: 'circle', glyph: '○', label: 'Esc / interrupt' },
-  { btn: 'triangle', glyph: '△', label: 'Push-to-talk' },
-  { btn: 'square', glyph: '□', label: 'New chat' },
+const ACTIONS: { btn: 'cross' | 'circle' | 'triangle' | 'square'; label: string }[] = [
+  { btn: 'cross', label: 'Submit ⏎' },
+  { btn: 'circle', label: 'Esc / interrupt' },
+  { btn: 'triangle', label: 'Push-to-talk' },
+  { btn: 'square', label: 'New chat' },
 ]
 
-export const CommandKeys: React.FC = () => {
+export const CommandKeys: React.FC<SceneProps> = ({ variant }) => {
   const frame = useCurrentFrame()
   const seg = Math.min(3, Math.floor(frame / SEG))
   const lf = frame - seg * SEG
   const pressed = lf >= 15 && lf < 55
-  const { btn, glyph, label } = LABELS[seg]
+  const { btn, label } = ACTIONS[seg]
+  const glyph = LABELS[variant][btn]
+  const highlight: Partial<Record<ButtonId, boolean>> = pressed ? { [btn]: true } : {}
 
   const lightbar =
     seg === 0 && pressed
@@ -29,13 +32,7 @@ export const CommandKeys: React.FC = () => {
   return (
     <SceneFrame
       caption={pressed ? `${glyph}  ${label}` : ' '}
-      pad={
-        <DualSense
-          lightbar={lightbar}
-          playerLeds={0b00001}
-          highlight={pressed ? { [btn]: true } : {}}
-        />
-      }
+      pad={<Pad variant={variant} lightbar={lightbar} playerLeds={0b00001} highlight={highlight} />}
       term={
         <Terminal width={368} height={310} title="claude">
           {/* segment 0: submit */}
@@ -74,7 +71,7 @@ export const CommandKeys: React.FC = () => {
                     }}
                   />
                   <span style={{ color: '#c8c8d0', fontSize: 13 }}>
-                    Listening… release △ to stop
+                    Listening… release {LABELS[variant].triangle} to stop
                   </span>
                 </div>
               )}

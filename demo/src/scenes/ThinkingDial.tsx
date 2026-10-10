@@ -1,6 +1,6 @@
 import React from 'react'
 import { useCurrentFrame } from 'remotion'
-import { DualSense, RIGHT_STICK } from '../components/DualSense'
+import { Pad, SceneProps, STICKS } from '../components/Pad'
 import { Terminal, Prompt, StatusLine } from '../components/Terminal'
 import { SceneFrame } from '../components/SceneFrame'
 import { COLORS, DIM, kf } from '../components/timeline'
@@ -16,7 +16,7 @@ const angleAt = (frame: number): number =>
     [177, 0], // counter-clockwise quarter-turn back
   ])
 
-export const ThinkingDial: React.FC = () => {
+export const ThinkingDial: React.FC<SceneProps> = ({ variant }) => {
   const frame = useCurrentFrame()
   const deg = angleAt(frame)
   const rad = ((deg - 90) * Math.PI) / 180
@@ -41,7 +41,7 @@ export const ThinkingDial: React.FC = () => {
   const arcSweep = deg
   const arcPath = (endDeg: number): string => {
     const r = 39
-    const { cx, cy } = RIGHT_STICK
+    const { cx, cy } = STICKS[variant].right
     const clamped = Math.max(-359.9, Math.min(359.9, endDeg))
     const a0 = -90
     const a1 = -90 + clamped
@@ -58,7 +58,7 @@ export const ThinkingDial: React.FC = () => {
     <SceneFrame
       caption="right stick dial → thinking effort"
       pad={
-        <DualSense lightbar={COLORS.idle} playerLeds={0b00001} rightStick={stick}>
+        <Pad variant={variant} lightbar={COLORS.idle} playerLeds={0b00001} rightStick={stick}>
           {turning && arcSweep > 2 && (
             <path
               d={arcPath(arcSweep)}
@@ -69,7 +69,7 @@ export const ThinkingDial: React.FC = () => {
               opacity={0.9}
             />
           )}
-        </DualSense>
+        </Pad>
       }
       term={
         <Terminal width={368} height={310} title="codex">

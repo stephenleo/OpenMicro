@@ -1,12 +1,13 @@
 import React from 'react'
 import { useCurrentFrame } from 'remotion'
-import { DualSense } from '../components/DualSense'
+import { LABELS, Pad, SceneProps } from '../components/Pad'
 import { Terminal, StatusLine } from '../components/Terminal'
 import { SceneFrame } from '../components/SceneFrame'
 import { COLORS, DIM, TEXT, kf, mixColor, pulse } from '../components/timeline'
 
-export const Layers: React.FC = () => {
+export const Layers: React.FC<SceneProps> = ({ variant }) => {
   const frame = useCurrentFrame()
+  const L = LABELS[variant]
 
   const l1Held = frame >= 30 && frame < 90
   const circlePressed = frame >= 60 && frame < 85
@@ -40,9 +41,10 @@ export const Layers: React.FC = () => {
 
   return (
     <SceneFrame
-      caption={l1Held ? 'hold L1 + ○ → switch layer' : `current: ${layerName}`}
+      caption={l1Held ? `hold ${L.l1} + ${L.circle} → switch layer` : `current: ${layerName}`}
       pad={
-        <DualSense
+        <Pad
+          variant={variant}
           lightbar={lightbar}
           playerLeds={0b00001}
           highlight={{
@@ -69,21 +71,27 @@ export const Layers: React.FC = () => {
           </div>
           {!onLayer2 && (
             <div style={{ marginTop: 14, fontSize: 13, color: DIM, lineHeight: 1.9 }}>
-              <div>✕ accept&nbsp;&nbsp;○ reject&nbsp;&nbsp;△ talk&nbsp;&nbsp;□ new chat</div>
-              <div style={{ marginTop: 6 }}>hold L1 + ○ ⇒ Layer 2</div>
+              <div>
+                {L.cross} accept&nbsp;&nbsp;{L.circle} reject&nbsp;&nbsp;{L.triangle}{' '}
+                talk&nbsp;&nbsp;
+                {L.square} new chat
+              </div>
+              <div style={{ marginTop: 6 }}>
+                hold {L.l1} + {L.circle} ⇒ Layer 2
+              </div>
             </div>
           )}
           {onLayer2 && (
             <div style={{ marginTop: 14, fontSize: 13, lineHeight: 1.9 }}>
               <StatusLine color="#c792ea">⬢ custom bindings active</StatusLine>
               <div style={{ marginTop: 6, color: TEXT }}>
-                ✕ → <span style={{ color: '#c792ea' }}>/compact</span>
+                {L.cross} → <span style={{ color: '#c792ea' }}>/compact</span>
               </div>
               <div style={{ color: TEXT }}>
-                □ → <span style={{ color: '#c792ea' }}>/model</span>
+                {L.square} → <span style={{ color: '#c792ea' }}>/model</span>
               </div>
               <div style={{ marginTop: 10, color: DIM, fontSize: 12 }}>
-                hold L1 + ✕ ⇒ back to Layer 1
+                hold {L.l1} + {L.cross} ⇒ back to Layer 1
               </div>
             </div>
           )}

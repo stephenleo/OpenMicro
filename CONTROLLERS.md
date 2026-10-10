@@ -12,6 +12,7 @@ Every controller below has a committed `openmicro doctor` report. CI replays cap
 | ----------------------------------------- | ------------------------------- | --------- | ---------- | --------- | -------------- | ------------- | --------------- |
 | GameSir Cyclone 2 (DS4 mode)              | DUALSHOCK 4 Wireless Controller | 054c:05c4 | bluetooth  | ds4       | 17/17          | none          | ✅ full         |
 | GameSir G7 Pro                            | GameSir-G7 Pro                  | 3537:1022 | bluetooth  | gamesir   | 17/17          | none          | ✅ full         |
+| Microsoft Xbox 360 Controller             | Controller                      | 045e:028e | usb        | xbox      | 17/17          | none          | ✅ full         |
 | Microsoft Xbox Elite Series 2             | Controller                      | 045e:0b00 | usb        | xbox      | 17/17          | none          | ✅ full         |
 | Microsoft Xbox Elite Series 2 (Bluetooth) | Xbox Wireless Controller        | 045e:0b13 | bluetooth  | xbox      | 17/17          | none          | ✅ full         |
 | Microsoft Xbox One S Controller           | Controller                      | 045e:02ea | usb        | xbox      | 17/17          | none          | ✅ full         |

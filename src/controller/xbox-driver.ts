@@ -13,6 +13,9 @@ export const XBOX_GIP_PIDS = [0x02ea, 0x0b00]
 // Verified against live Xbox Wireless Controller (0x0b20) and Xbox Elite
 // Series 2 (0x0b13) captures.
 export const XBOX_BT_PIDS = [0x0b13, 0x0b20]
+// Wired Xbox 360 pads (XInput report, 20 bytes). Verified against a live
+// Xbox 360 Controller (0x028e) capture.
+export const XBOX_360_PIDS = [0x028e]
 
 /** Normalize a signed 16-bit stick value to -1.0..1.0. */
 function normalizeAxis(raw: number): number {
@@ -137,6 +140,56 @@ export function parseXboxGipReport(data: Buffer): ControllerEvent[] {
   events.push({ kind: 'axis', axis: 'left_y', value: normalizeAxis(data.readInt16LE(12)) })
   events.push({ kind: 'axis', axis: 'right_x', value: normalizeAxis(data.readInt16LE(14)) })
   events.push({ kind: 'axis', axis: 'right_y', value: normalizeAxis(data.readInt16LE(16)) })
+
+  return events
+}
+
+/**
+ * Parse a wired Xbox 360 input report (20 bytes).
+ * Byte 0: 0x00 message type, byte 1: 0x14 length,
+ * byte 2: dpad/start/back/stick clicks, byte 3: bumpers/guide/face buttons,
+ * byte 4: LT, byte 5: RT (uint8, 0-255), bytes 6-13: sticks (int16 LE).
+ * Layout verified against a live Xbox 360 Controller (045e:028e) capture.
+ */
+export function parseXbox360Report(data: Buffer): ControllerEvent[] {
+  const events: ControllerEvent[] = []
+  if (data.length < 14 || data[0] !== 0x00 || data[1] !== 0x14) return events
+
+  const b2 = data[2]!
+  const b3 = data[3]!
+  const map: Array<[number, number, ButtonId]> = [
+    [b2, 0x01, 'dpad_up'],
+    [b2, 0x02, 'dpad_down'],
+    [b2, 0x04, 'dpad_left'],
+    [b2, 0x08, 'dpad_right'],
+    [b2, 0x10, 'menu'],
+    [b2, 0x20, 'view'],
+    [b2, 0x40, 'l3'],
+    [b2, 0x80, 'r3'],
+    [b3, 0x01, 'l1'],
+    [b3, 0x02, 'r1'],
+    // Guide button maps to touchpad like the other pads' home buttons.
+    [b3, 0x04, 'touchpad'],
+    [b3, 0x10, 'south'],
+    [b3, 0x20, 'east'],
+    [b3, 0x40, 'west'],
+    [b3, 0x80, 'north'],
+  ]
+  for (const [byte, bit, id] of map) {
+    events.push({ kind: 'button', button: id, pressed: (byte & bit) !== 0 })
+  }
+
+  const lt = data[4]! / 255
+  const rt = data[5]! / 255
+  events.push({ kind: 'axis', axis: 'l2', value: lt })
+  events.push({ kind: 'axis', axis: 'r2', value: rt })
+  events.push({ kind: 'button', button: 'l2', pressed: lt > 0.25 })
+  events.push({ kind: 'button', button: 'r2', pressed: rt > 0.25 })
+
+  events.push({ kind: 'axis', axis: 'left_x', value: normalizeAxis(data.readInt16LE(6)) })
+  events.push({ kind: 'axis', axis: 'left_y', value: normalizeAxis(data.readInt16LE(8)) })
+  events.push({ kind: 'axis', axis: 'right_x', value: normalizeAxis(data.readInt16LE(10)) })
+  events.push({ kind: 'axis', axis: 'right_y', value: normalizeAxis(data.readInt16LE(12)) })
 
   return events
 }

@@ -22,7 +22,13 @@ import { createDriver, DUALSENSE_PIDS, DUALSENSE_VID } from './controller/hid-ma
 import type { ControllerHAL } from './controller/hal.js'
 import { DS4_PIDS, DS4_VID } from './controller/ds4-driver.js'
 import { GAMESIR_PIDS, GAMESIR_VID } from './controller/gamesir-driver.js'
-import { XBOX_BT_PIDS, XBOX_GIP_PIDS, XBOX_PIDS, XBOX_VID } from './controller/xbox-driver.js'
+import {
+  XBOX_360_PIDS,
+  XBOX_BT_PIDS,
+  XBOX_GIP_PIDS,
+  XBOX_PIDS,
+  XBOX_VID,
+} from './controller/xbox-driver.js'
 import type { AxisId, ButtonId, ControllerEvent, ControllerType } from './types.js'
 
 const PROMPT_TIMEOUT_MS = 30_000
@@ -136,7 +142,7 @@ function findDevice(type: ControllerType): Device | undefined {
     return all.find(
       (d) =>
         d.vendorId === XBOX_VID &&
-        [...XBOX_PIDS, ...XBOX_GIP_PIDS, ...XBOX_BT_PIDS].includes(d.productId),
+        [...XBOX_PIDS, ...XBOX_GIP_PIDS, ...XBOX_BT_PIDS, ...XBOX_360_PIDS].includes(d.productId),
     )
   }
   if (type === 'gamesir') {

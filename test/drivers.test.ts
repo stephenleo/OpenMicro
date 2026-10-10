@@ -4,6 +4,7 @@ import { parseDs4Report } from '../src/controller/ds4-driver.js'
 import { parseGameSirReport } from '../src/controller/gamesir-driver.js'
 import { normalizeGenericAxis, parseGenericReport } from '../src/controller/generic-driver.js'
 import {
+  parseXbox360Report,
   parseXboxBtReport,
   parseXboxGipReport,
   parseXboxReport,
@@ -174,6 +175,69 @@ describe('parseXboxGipReport', () => {
   it('ignores short frames', () => {
     expect(parseXboxGipReport(Buffer.alloc(8))).toEqual([])
     expect(parseXboxGipReport(Buffer.from('0730', 'hex'))).toEqual([])
+  })
+})
+
+describe('parseXbox360Report', () => {
+  // Real frames captured from a wired Xbox 360 Controller (045e:028e) on macOS.
+  const x360 = (hex: string): Buffer => Buffer.from(hex, 'hex')
+
+  it('parses face buttons, bumpers and guide from byte 3', () => {
+    const cases: Array<[string, string]> = [
+      ['001400100000d8f9c2f771094509000000000000', 'south'],
+      ['001400200000d8f931f871094509000000000000', 'east'],
+      ['001400400000d8f931f871094509000000000000', 'west'],
+      ['001400800000d8f931f871094509000000000000', 'north'],
+      ['0014000100006cf931f871094509000000000000', 'l1'],
+      ['001400020000d8f9c2f771094509000000000000', 'r1'],
+      ['0014000400004cf7b3feb60ebd05000000000000', 'touchpad'],
+    ]
+    for (const [hex, id] of cases) {
+      const b = buttons(parseXbox360Report(x360(hex)))
+      expect(b.get(id), id).toBe(true)
+      expect([...b.values()].filter(Boolean), id).toHaveLength(1)
+    }
+  })
+
+  it('parses dpad, menu/view and stick clicks from byte 2', () => {
+    const cases: Array<[string, string]> = [
+      ['0014010000001efba9fb6c14bd05000000000000', 'dpad_up'],
+      ['0014020000001efb18fc460ebd05000000000000', 'dpad_down'],
+      ['0014040000001efba9fb460ebd05000000000000', 'dpad_left'],
+      ['0014080000001efb18fcb60e4c05000000000000', 'dpad_right'],
+      ['001410000000d8f9c2f77109d408000000000000', 'menu'],
+      ['001420000000d8f9c2f771094509000000000000', 'view'],
+      ['001440000000bb0518fc970f6308000000000000', 'l3'],
+      ['001480000000a8ef6bf3fa01270a000000000000', 'r3'],
+    ]
+    for (const [hex, id] of cases) {
+      expect(buttons(parseXbox360Report(x360(hex))).get(id), id).toBe(true)
+    }
+  })
+
+  it('parses triggers as uint8 at bytes 4-5', () => {
+    const left = parseXbox360Report(x360('00140000ff004cf7b3fe460ebd05000000000000'))
+    expect(axes(left).get('l2')).toBe(1)
+    expect(buttons(left).get('l2')).toBe(true)
+    expect(buttons(left).get('r2')).toBe(false)
+    const right = parseXbox360Report(x360('0014000000ff4cf722ffb60ebd05000000000000'))
+    expect(axes(right).get('r2')).toBe(1)
+    expect(buttons(right).get('r2')).toBe(true)
+  })
+
+  it('parses sticks as int16 LE at bytes 6-13', () => {
+    const data = x360('001400000000d8f9c2f771094509000000000000')
+    data.writeInt16LE(-32768, 6)
+    data.writeInt16LE(32767, 12)
+    const a = axes(parseXbox360Report(data))
+    expect(a.get('left_x')).toBe(-1)
+    expect(a.get('right_y')).toBe(1)
+  })
+
+  it('ignores short frames and other message types', () => {
+    expect(parseXbox360Report(Buffer.alloc(8))).toEqual([])
+    expect(parseXbox360Report(x360('010300'))).toEqual([])
+    expect(parseXbox360Report(x360('0814000000000000000000000000000000000000'))).toEqual([])
   })
 })
 

@@ -1,14 +1,16 @@
 import React from 'react'
 import { useCurrentFrame } from 'remotion'
-import { DualSense } from '../components/DualSense'
+import { Pad, SceneProps, STICKS } from '../components/Pad'
 import { Terminal, Prompt, StatusLine, Cursor, typeOn } from '../components/Terminal'
 import { SceneFrame } from '../components/SceneFrame'
 import { COLORS, kf, mixColor, pulse } from '../components/timeline'
 
 const WORKFLOW = 'Review this PR for correctness, security, and style issues.'
 
-export const WorkflowFlick: React.FC = () => {
+export const WorkflowFlick: React.FC<SceneProps> = ({ variant }) => {
   const frame = useCurrentFrame()
+  const { cx, cy } = STICKS[variant].left
+  const callout = STICKS[variant].callout
 
   // Flick: up 20-30, snap back 30-40.
   const stickY = kf(frame, [
@@ -42,7 +44,12 @@ export const WorkflowFlick: React.FC = () => {
     <SceneFrame
       caption="left stick flick → workflow prompt"
       pad={
-        <DualSense lightbar={lightbar} playerLeds={0b00001} leftStick={{ x: 0, y: stickY }}>
+        <Pad
+          variant={variant}
+          lightbar={lightbar}
+          playerLeds={0b00001}
+          leftStick={{ x: 0, y: stickY }}
+        >
           {/* motion streak */}
           {flicking && (
             <g
@@ -54,7 +61,7 @@ export const WorkflowFlick: React.FC = () => {
               ])}
             >
               <path
-                d="M 168 186 L 171 156 M 176 184 L 176 152 M 184 186 L 181 156"
+                d={`M ${cx - 8} ${cy + 1} L ${cx - 5} ${cy - 29} M ${cx} ${cy - 1} L ${cx} ${cy - 33} M ${cx + 8} ${cy + 1} L ${cx + 5} ${cy - 29}`}
                 stroke="#4da3ff"
                 strokeWidth={3.5}
                 strokeLinecap="round"
@@ -65,8 +72,8 @@ export const WorkflowFlick: React.FC = () => {
           {showLabel && (
             <g>
               <rect
-                x={136}
-                y={248}
+                x={callout.x - 40}
+                y={callout.y - 10}
                 width={80}
                 height={20}
                 rx={10}
@@ -75,8 +82,8 @@ export const WorkflowFlick: React.FC = () => {
                 strokeWidth={1}
               />
               <text
-                x={176}
-                y={262}
+                x={callout.x}
+                y={callout.y + 4}
                 textAnchor="middle"
                 fontSize={11}
                 fontWeight={700}
@@ -87,7 +94,7 @@ export const WorkflowFlick: React.FC = () => {
               </text>
             </g>
           )}
-        </DualSense>
+        </Pad>
       }
       term={
         <Terminal width={368} height={310} title="claude">

@@ -1,0 +1,159 @@
+{
+  "schemaVersion": 1,
+  "openmicroVersion": "1.4.3",
+  "platform": "darwin",
+  "osVersion": "Darwin Kernel Version 25.6.0: Fri Jul 31 19:16:20 PDT 2026; root:xnu-12377.161.14~5/RELEASE_ARM64_T8142",
+  "controller": {
+    "vid": "0x045e",
+    "pid": "0x028e",
+    "product": "Controller",
+    "makeModel": "Microsoft Xbox 360 Controller",
+    "transport": "usb",
+    "driver": "xbox"
+  },
+  "results": {
+    "south": {
+      "status": "pass"
+    },
+    "east": {
+      "status": "pass",
+      "capture": {
+        "pressed": "001400200000aafd4d0107fe3dfe000000000000",
+        "idle": "0014001000003efd4d0107fe3dfe000000000000"
+      }
+    },
+    "west": {
+      "status": "pass",
+      "capture": {
+        "pressed": "001400400000aafdbc0107feccfd000000000000",
+        "idle": "001400200000aafd4d0107fe3dfe000000000000"
+      }
+    },
+    "north": {
+      "status": "pass",
+      "capture": {
+        "pressed": "001400800000aafdde0077fe3dfe000000000000",
+        "idle": "001400400000aafdbc0107feccfd000000000000"
+      }
+    },
+    "dpad_up": {
+      "status": "pass",
+      "capture": {
+        "pressed": "00140100000045fade0077fe3dfe000000000000",
+        "idle": "001400800000aafdde0077fe3dfe000000000000"
+      }
+    },
+    "dpad_down": {
+      "status": "pass",
+      "capture": {
+        "pressed": "001402000000d8f9de0007fe3dfe000000000000",
+        "idle": "00140100000045fade0077fe3dfe000000000000"
+      }
+    },
+    "dpad_left": {
+      "status": "pass",
+      "capture": {
+        "pressed": "001404000000d8f9de0007fe3dfe000000000000",
+        "idle": "001402000000d8f9de0007fe3dfe000000000000"
+      }
+    },
+    "dpad_right": {
+      "status": "pass",
+      "capture": {
+        "pressed": "001408000000d8f9de0007fe3dfe000000000000",
+        "idle": "001404000000d8f9de0007fe3dfe000000000000"
+      }
+    },
+    "l1": {
+      "status": "pass",
+      "capture": {
+        "pressed": "00140001000045fade0007fe3dfe000000000000",
+        "idle": "001408000000d8f9de0007fe3dfe000000000000"
+      }
+    },
+    "r1": {
+      "status": "pass",
+      "capture": {
+        "pressed": "001400020000d8f9de0007fe3dfe000000000000",
+        "idle": "00140001000045fade0007fe3dfe000000000000"
+      }
+    },
+    "l2": {
+      "status": "pass",
+      "capture": {
+        "pressed": "00140000950081f00000b6fc44fa000000000000",
+        "idle": "001400020000d8f9de0007fe3dfe000000000000"
+      }
+    },
+    "r2": {
+      "status": "pass",
+      "capture": {
+        "pressed": "00140000004781f00000b6fcd3f9000000000000",
+        "idle": "00140000950081f00000b6fc44fa000000000000"
+      }
+    },
+    "l3": {
+      "status": "pass",
+      "capture": {
+        "pressed": "00144000000017fe31f8970fd408000000000000",
+        "idle": "00140000004781f00000b6fcd3f9000000000000"
+      }
+    },
+    "r3": {
+      "status": "pass",
+      "capture": {
+        "pressed": "0014800000009c03cbfa0109db04000000000000",
+        "idle": "00144000000017fe31f8970fd408000000000000"
+      }
+    },
+    "menu": {
+      "status": "pass",
+      "capture": {
+        "pressed": "0014100000009c03cbfa5911ccfd000000000000",
+        "idle": "0014800000009c03cbfa0109db04000000000000"
+      }
+    },
+    "view": {
+      "status": "pass",
+      "capture": {
+        "pressed": "0014200000009c03cbfae810ccfd000000000000",
+        "idle": "0014100000009c03cbfa5911ccfd000000000000"
+      }
+    },
+    "touchpad": {
+      "status": "pass",
+      "capture": {
+        "pressed": "0014000400009c03cbfa5911ccfd000000000000",
+        "idle": "0014200000009c03cbfae810ccfd000000000000"
+      }
+    }
+  },
+  "axes": {
+    "left_x": {
+      "min": -1,
+      "max": 0.9867244483779413
+    },
+    "left_y": {
+      "min": -1,
+      "max": 1
+    },
+    "right_x": {
+      "min": -1,
+      "max": 1
+    },
+    "right_y": {
+      "min": -0.996490478515625,
+      "max": 1
+    },
+    "l2": {
+      "min": 0,
+      "max": 0
+    },
+    "r2": {
+      "min": 0,
+      "max": 0
+    }
+  },
+  "output": "unsupported",
+  "timestamp": "2026-10-10T14:05:17.964Z"
+}
