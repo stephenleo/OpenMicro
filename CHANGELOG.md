@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [1.4.4] - 2026-11-16
+
+### Fixed
+
+- **Wired Xbox 360 Controller.** The pad (`045e:028e`) fell back to the `generic` driver and failed `openmicro doctor`. A new `parseXbox360Report` decodes its 20-byte XInput report (d-pad, start/back, stick clicks, bumpers, guide, face buttons, uint8 triggers, int16 sticks), the PID now routes to it in `createDriver()` and doctor's device lookup, and a 17/17 doctor report is committed as a replay fixture.
+- **Claude Code push-to-talk.** The north button (△ / Y) sends a single Space per press, which Claude Code's default `hold` voice mode reads as a typed space. The README now explains setting `voice.mode` to `"tap"` and adds a troubleshooting entry.
+
+### Added
+
+- **Xbox 360 demo GIFs.** The README demos now include Xbox 360 renders of the command keys, layers, multi-session, thinking dial and workflow flick scenes.
+
 ## [1.4.3] - 2026-08-23
 
 ### Added
