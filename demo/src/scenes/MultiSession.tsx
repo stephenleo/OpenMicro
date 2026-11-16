@@ -1,12 +1,13 @@
 import React from 'react'
 import { useCurrentFrame } from 'remotion'
-import { DualSense } from '../components/DualSense'
+import { LABELS, Pad, SceneProps } from '../components/Pad'
 import { Terminal, Prompt, StatusLine } from '../components/Terminal'
 import { SceneFrame } from '../components/SceneFrame'
 import { COLORS, mixColor, pulse } from '../components/timeline'
 
-export const MultiSession: React.FC = () => {
+export const MultiSession: React.FC<SceneProps> = ({ variant }) => {
   const frame = useCurrentFrame()
+  const L = LABELS[variant]
 
   // Timeline: pane1 focused/executing 0-90 | touchpad click 60-85 | focus->pane2 at 85,
   // lightbar amber | ✕ 130-155 -> pane2 approves, executing blue | touchpad click 235-255
@@ -43,13 +44,14 @@ export const MultiSession: React.FC = () => {
     <SceneFrame
       caption={
         touchpadClick
-          ? 'touchpad click → cycle focus'
+          ? `${L.touchpadClick} → cycle focus`
           : focus2
             ? 'focus: session 2'
             : 'focus: session 1'
       }
       pad={
-        <DualSense
+        <Pad
+          variant={variant}
           lightbar={lightbar}
           playerLeds={0b00011}
           highlight={{ touchpad: touchpadClick ? '#4da3ff' : false, cross: crossPressed }}
@@ -72,7 +74,7 @@ export const MultiSession: React.FC = () => {
               <Prompt>refactor auth module</Prompt>
               {pane2Waiting && (
                 <StatusLine color={COLORS.waiting}>
-                  ⚠ Allow Edit(auth.ts)? — press ✕ to approve
+                  ⚠ Allow Edit(auth.ts)? — press {L.cross} to approve
                 </StatusLine>
               )}
               {!pane2Waiting && (

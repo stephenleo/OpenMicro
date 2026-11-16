@@ -63,7 +63,7 @@ export const claudeHarness: Harness = {
       case 'reject':
         return { bytes: '\x1b' } // Esc interrupts Claude / closes a dialog
       case 'push_to_talk':
-        return { bytes: ' ' } // Space = hold-to-dictate (docs "Voice input", requires voice dictation enabled)
+        return { bytes: ' ' } // Space toggles dictation; needs /voice with voice.mode "tap" (one byte can't simulate a held key)
       case 'new_chat':
         return { bytes: '/clear\r' } // /clear starts a new conversation with empty context
       case 'thinking_depth': {

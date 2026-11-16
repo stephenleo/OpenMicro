@@ -14,9 +14,11 @@ import { GAMESIR_PIDS, GAMESIR_VID, parseGameSirReport } from './gamesir-driver.
 import { parseGenericReport } from './generic-driver.js'
 import { RawHidDriver } from './raw-hid-driver.js'
 import {
+  parseXbox360Report,
   parseXboxBtReport,
   parseXboxGipReport,
   parseXboxReport,
+  XBOX_360_PIDS,
   XBOX_BT_PIDS,
   XBOX_GIP_PIDS,
   XBOX_PIDS,
@@ -59,6 +61,12 @@ export function createDriver(): ControllerHAL | null {
   const xboxBt = devices.find((d) => d.vendorId === XBOX_VID && XBOX_BT_PIDS.includes(d.productId))
   if (xboxBt?.path) {
     return new RawHidDriver('xbox', xboxBt.path, parseXboxBtReport)
+  }
+  const xbox360 = devices.find(
+    (d) => d.vendorId === XBOX_VID && XBOX_360_PIDS.includes(d.productId),
+  )
+  if (xbox360?.path) {
+    return new RawHidDriver('xbox', xbox360.path, parseXbox360Report)
   }
   const gamesir = devices.find(
     (d) => d.vendorId === GAMESIR_VID && GAMESIR_PIDS.includes(d.productId),

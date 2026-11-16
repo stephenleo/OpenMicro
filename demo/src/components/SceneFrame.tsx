@@ -20,18 +20,20 @@ export const SceneFrame: React.FC<{
   >
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
       {pad}
-      {caption && (
-        <div
-          style={{
-            color: DIM,
-            fontFamily: 'ui-sans-serif, sans-serif',
-            fontSize: 14,
-            fontWeight: 600,
-          }}
-        >
-          {caption}
-        </div>
-      )}
+      {/* fixed-height line so the pad doesn't jump when a caption appears or clears */}
+      <div
+        style={{
+          color: DIM,
+          fontFamily: 'ui-sans-serif, sans-serif',
+          fontSize: 14,
+          fontWeight: 600,
+          height: 20,
+          lineHeight: '20px',
+          whiteSpace: 'pre',
+        }}
+      >
+        {caption}
+      </div>
     </div>
     {term}
   </AbsoluteFill>
